@@ -51,8 +51,8 @@ func prettyPrint(command string, page []byte) {
 	// The page is not in the database
 	if page == nil {
 		println()
-		fmt.Println(aurora.Bold(command), "documentation is not available")
-		fmt.Println("Consider contributing a Pull Request to https://github.com/tldr-pages/tldr")
+		fmt.Println(aurora.Bold(command), "documentation is not available.")
+		fmt.Println("Consider making a Pull Request to https://github.com/tldr-pages/tldr")
 		println()
 		return
 	}
@@ -91,8 +91,9 @@ func prettyPrint(command string, page []byte) {
 			// Some ugly parsing...
 			parts := []interface{}{}
 
-			// Our parsing method would fail on }}{{, but as
-			// it's a no-op we can safely remove it.
+			// Our parsing method would fail on {{}} or }}{{, but as
+			// these a no-ops we can safely remove them.
+			line = strings.Replace(line, "{{}}", "", -1)
 			line = strings.Replace(line, "}}{{", "", -1)
 
 			inVerbatim := !strings.HasPrefix(line, "{{")
@@ -108,6 +109,10 @@ func prettyPrint(command string, page []byte) {
 					inVerbatim = !inVerbatim
 				}
 			}
+
+			// As you might have noticed, we never check if the braces are balanced.
+			// But that check is not regular, and pages should be valid,
+			// so in theory we never have a case where the braces aren't balanced.
 
 			// Print the parsed line
 			print("  ")
