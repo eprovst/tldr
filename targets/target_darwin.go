@@ -13,14 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-//+build !linux,!darwin,!windows,!solaris
-
-package info
-
-import "runtime"
+package targets
 
 // Information about the current system
 const (
-	OsName = runtime.GOOS
-	OsDir  = "common"
+	OsName = "macOS"
+	OsDir  = "osx"
 )

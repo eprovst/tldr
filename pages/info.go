@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package info
+package pages
 
 import (
 	"fmt"
@@ -21,11 +21,14 @@ import (
 	"path/filepath"
 )
 
-// PagesSource is the location from where we will download the pages.
-const PagesSource = "https://tldr.sh/assets/tldr.zip"
+// pagesSource is the location from where we will download the pages.
+const pagesSource = "https://tldr.sh/assets/tldr.zip"
+
+// pagesBucket is the name of the bucket containing the pages
+var pagesBucket = []byte("pages")
 
 // GetDatabasePath returns the path to the database or panics if the system
-// is unsupported.
+// does not have a cache directory.
 func GetDatabasePath() string {
 	dir, err := os.UserCacheDir()
 	if err != nil {
@@ -36,8 +39,8 @@ func GetDatabasePath() string {
 	return filepath.Join(dir, "tldr", "tldr.bbolt")
 }
 
-// Exists checks if a file exists
-func Exists(path string) bool {
+// PathExists checks if a path/file exists
+func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }

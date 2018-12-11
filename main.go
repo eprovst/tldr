@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/elecprog/tldr/info"
 	"github.com/elecprog/tldr/pages"
+	"github.com/elecprog/tldr/targets"
 	"github.com/spf13/cobra"
 	"go.etcd.io/bbolt"
 )
@@ -32,7 +32,7 @@ var update = false
 
 var cmd = &cobra.Command{
 	Use:     "tldr [-h] [-u] command [command ...]",
-	Version: "v0.1.0",
+	Version: "v0.1.1",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
@@ -48,10 +48,10 @@ var cmd = &cobra.Command{
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		dbPath := info.GetDatabasePath()
+		dbPath := pages.GetDatabasePath()
 
 		// See if it's a fresh database
-		if !info.Exists(dbPath) {
+		if !pages.PathExists(dbPath) {
 			// Create the folder where the database will reside
 			err := os.MkdirAll(filepath.Dir(dbPath), 0777)
 
@@ -66,7 +66,7 @@ var cmd = &cobra.Command{
 
 		// Open or create the database, with a timeout of 1 second
 		// and readonly if we do not have to update it.
-		db, err := bbolt.Open(info.GetDatabasePath(), 0600,
+		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
 				ReadOnly: !update,
@@ -92,7 +92,7 @@ var cmd = &cobra.Command{
 func main() {
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
 
-	cmd.SetVersionTemplate("tldr {{.Version}} on " + info.OsName + "\n")
+	cmd.SetVersionTemplate("tldr {{.Version}} on " + targets.OsName + "\n")
 
 	// Execute the command
 	if err := cmd.Execute(); err != nil {

@@ -25,14 +25,14 @@ import (
 	"path"
 	"strings"
 
-	"github.com/elecprog/tldr/info"
+	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
 // Update fetches all pages and stores them in the database
 func Update(database *bbolt.DB) {
 	// Download the ZIP file
-	zipReader, err := downloadZip(info.PagesSource)
+	zipReader, err := downloadZip(pagesSource)
 
 	if err != nil {
 		fmt.Println("error:", err)
@@ -56,7 +56,7 @@ func Update(database *bbolt.DB) {
 			// Read in all pages
 			for _, file := range zipReader.File {
 				if strings.HasPrefix(file.Name, "pages/common/") ||
-					strings.HasPrefix(file.Name, "pages/"+info.OsDir+"/") {
+					strings.HasPrefix(file.Name, "pages/"+targets.OsDir+"/") {
 
 					command := strings.TrimSuffix(path.Base(file.Name), ".md")
 

@@ -1,7 +1,8 @@
 tldr
 ====
 
-A `tldr` client in Go, focusing on speed by storing pages in a NoSQL database.
+A [tldr](https://github.com/tldr-pages/tldr) client in Go, focusing on speed by storing pages in a database.
+The choice of Go also allows us to support all platforms which Go compiles to.
 
 ## Installation
 You can use [Go](https://golang.org/)'s tooling
@@ -20,7 +21,7 @@ You can print information for one or more commands by using:
 tldr command1 [command2 ...]
 ```
 
-This client downloads all tldr pages on the first run (resulting in a database of about 2&nbsp;MB). To redownload the pages and rebuild the database you can use:
+This client downloads all tldr pages on the first run (resulting in a database of about 2&nbsp;MB) which should only take a couple of seconds. To redownload the pages and rebuild the database you can use:
 
 ```
 tldr -u
