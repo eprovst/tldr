@@ -24,7 +24,7 @@ import (
 )
 
 // Show shows help for a command
-func Show(database *bbolt.DB, command string) {
+func Show(database *bbolt.DB, commands []string) {
 	// Get the page
 	err := database.View(
 		func(tx *bbolt.Tx) error {
@@ -32,9 +32,11 @@ func Show(database *bbolt.DB, command string) {
 			tx.CreateBucketIfNotExists(pagesBucket)
 			buck := tx.Bucket(pagesBucket)
 
-			// Read the page
-			page := buck.Get([]byte(command))
-			prettyPrint(command, page)
+			// Print all the given commands
+			for _, command := range commands {
+				page := buck.Get([]byte(command))
+				prettyPrint(command, page)
+			}
 
 			return nil
 		})
@@ -46,7 +48,7 @@ func Show(database *bbolt.DB, command string) {
 }
 
 func prettyPrint(command string, page []byte) {
-	// No page in database
+	// The page is not in the database
 	if page == nil {
 		println()
 		fmt.Println(aurora.Bold(command), "documentation is not available")

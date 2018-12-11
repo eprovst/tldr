@@ -69,9 +69,7 @@ var cmd = &cobra.Command{
 		}
 
 		// Now do the lookups
-		for _, command := range args {
-			pages.Show(db, command)
-		}
+		pages.Show(db, args)
 	},
 }
 
