@@ -17,6 +17,6 @@ package info
 
 // Information about the current system
 const (
-	OsName = "solaris"
+	OsName = "Solaris"
 	OsDir  = "sunos"
 )
