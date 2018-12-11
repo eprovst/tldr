@@ -17,10 +17,9 @@ package pages
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
-	au "github.com/logrusorgru/aurora"
+	"github.com/logrusorgru/aurora"
 	"go.etcd.io/bbolt"
 )
 
@@ -42,48 +41,66 @@ func Show(database *bbolt.DB, command string) {
 
 	// Has something gone wrong?
 	if err != nil {
-		log.Println(err)
+		fmt.Println("warning:", err)
 	}
 }
 
 func prettyPrint(command string, page []byte) {
 	// No page in database
 	if page == nil {
-		fmt.Println(command, "documentation is not available")
+		println()
+		fmt.Println(aurora.Bold(command), "documentation is not available")
 		fmt.Println("Consider contributing a Pull Request to https://github.com/tldr-pages/tldr")
+		println()
 		return
 	}
+
+	// Add an blank line in front of the page
+	println()
 
 	// Pretty print the lines in the page
 	for _, line := range strings.Split(string(page), "\n") {
 		line = strings.TrimSpace(line)
 
-		if strings.HasPrefix(line, "- ") {
-			line = strings.TrimPrefix(line, "- ")
-			fmt.Println("-", au.Green(line))
+		if strings.HasPrefix(line, "#") {
+			line = strings.TrimPrefix(line, "#")
+			line = strings.TrimSpace(line)
 
-		} else if strings.HasPrefix(line, "# ") {
-			line = strings.TrimPrefix(line, "# ")
-			fmt.Println(au.Bold(line))
+			fmt.Println(aurora.Bold(line))
 
-		} else if strings.HasPrefix(line, "> ") {
-			line = strings.TrimPrefix(line, "> ")
+		} else if strings.HasPrefix(line, ">") {
+			line = strings.TrimPrefix(line, ">")
+			line = strings.TrimSpace(line)
+
 			fmt.Println(line)
+
+		} else if strings.HasPrefix(line, "-") {
+			line = strings.TrimPrefix(line, "-")
+			line = strings.TrimSpace(line)
+
+			fmt.Println("\n-", aurora.Green(line).Bold())
 
 		} else if strings.HasPrefix(line, "`") && strings.HasSuffix(line, "`") {
 			line = strings.TrimPrefix(line, "`")
 			line = strings.TrimSuffix(line, "`")
 
+			line = strings.TrimSpace(line)
+
 			// Some ugly parsing...
-			parts := []au.Value{}
+			parts := []aurora.Value{}
+
+			// Our parsing method would fail on }}{{, but as
+			// it's a no-op we can safely remove it.
+			line = strings.Replace(line, "}}{{", "", -1)
+
 			inVerbatim := !strings.HasPrefix(line, "{{")
 			for _, segment := range strings.Split(line, "{{") {
 				for _, part := range strings.Split(segment, "}}") {
 					if inVerbatim {
-						parts = append(parts, au.Red(part))
+						parts = append(parts, aurora.Red(part).Bold())
 
 					} else {
-						parts = append(parts, au.Gray(part))
+						parts = append(parts, aurora.Gray(part))
 					}
 
 					inVerbatim = !inVerbatim
@@ -97,8 +114,15 @@ func prettyPrint(command string, page []byte) {
 			}
 			println()
 
+		} else if line == "" {
+			// Skip empty lines
+
 		} else {
+			// Simply show invalid lines without formatting
 			fmt.Println(line)
 		}
 	}
+
+	// Add an extra blank line at the end of the page
+	println()
 }

@@ -16,7 +16,7 @@
 package info
 
 import (
-	"log"
+	"fmt"
 	"os"
 )
 
@@ -28,7 +28,8 @@ const PagesSource = "https://tldr.sh/assets/tldr.zip"
 func GetDatabasePath() string {
 	dir, err := os.UserCacheDir()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error:", err)
+		os.Exit(1)
 	}
 
 	return dir + "/tldr/tldr.bbolt"

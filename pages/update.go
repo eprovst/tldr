@@ -18,9 +18,10 @@ package pages
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -29,12 +30,13 @@ import (
 )
 
 // Update fetches all pages and stores them in the database
-func Update(database *bbolt.DB) error {
+func Update(database *bbolt.DB) {
 	// Download the ZIP file
 	zipReader, err := downloadZip(info.PagesSource)
 
 	if err != nil {
-		return err
+		fmt.Println("error:", err)
+		os.Exit(1)
 	}
 
 	// Remove the old bucket, if it exists
@@ -62,13 +64,13 @@ func Update(database *bbolt.DB) error {
 					contents, err := file.Open()
 
 					if err != nil {
-						log.Println(err)
+						fmt.Println("warning:", err)
 					}
 
 					out, err := ioutil.ReadAll(contents)
 
 					if err != nil {
-						log.Println(err)
+						fmt.Println("warning:", err)
 					}
 
 					// Write the page
@@ -82,10 +84,8 @@ func Update(database *bbolt.DB) error {
 
 	// Has something gone wrong?
 	if err != nil {
-		log.Println(err)
+		fmt.Println("warning:", err)
 	}
-
-	return nil
 }
 
 func downloadZip(url string) (*zip.Reader, error) {

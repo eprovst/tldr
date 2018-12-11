@@ -17,7 +17,7 @@ package main
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"os"
 	"time"
 
@@ -57,7 +57,8 @@ var cmd = &cobra.Command{
 			})
 
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("error:", err)
+			os.Exit(1)
 		}
 
 		defer db.Close()
@@ -68,12 +69,7 @@ var cmd = &cobra.Command{
 		}
 
 		// Now do the lookups
-		for i, command := range args {
-			if i != 0 {
-				// An extra empty line between commands
-				println()
-			}
-
+		for _, command := range args {
 			pages.Show(db, command)
 		}
 	},
@@ -84,6 +80,7 @@ func main() {
 
 	// Execute the command
 	if err := cmd.Execute(); err != nil {
+		// If something went wrong, exit with 1
 		os.Exit(1)
 	}
 }
