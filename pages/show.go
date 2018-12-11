@@ -87,7 +87,7 @@ func prettyPrint(command string, page []byte) {
 			line = strings.TrimSpace(line)
 
 			// Some ugly parsing...
-			parts := []aurora.Value{}
+			parts := []interface{}{}
 
 			// Our parsing method would fail on }}{{, but as
 			// it's a no-op we can safely remove it.
@@ -100,7 +100,7 @@ func prettyPrint(command string, page []byte) {
 						parts = append(parts, aurora.Red(part).Bold())
 
 					} else {
-						parts = append(parts, aurora.Gray(part))
+						parts = append(parts, part)
 					}
 
 					inVerbatim = !inVerbatim
