@@ -15,8 +15,49 @@
 
 package info
 
+import (
+	"fmt"
+	"os"
+
+	"golang.org/x/sys/windows"
+)
+
 // Information about the current system
 const (
 	OsName = "Windows"
 	OsDir  = "windows"
 )
+
+// Windows by default ignores ASCII escape codes,
+// however we can change this using this.
+// Why is this not the default? No idea...
+func init() {
+	// Get a handle to the console
+	stdOutHandle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
+
+	if err != nil {
+		fmt.Println("Failed to get a handle for standard input, please open an issue, this should work...")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Get the current console settings
+	var consoleMode uint32 = 0
+	err = windows.GetConsoleMode(stdOutHandle, &consoleMode)
+
+	if err != nil {
+		fmt.Println("Failed to get current terminal mode, please open an issue, this should work...")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Add support for escape codes to those settings
+	consoleMode |= windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	err = windows.SetConsoleMode(stdOutHandle, consoleMode)
+
+	if err != nil {
+		fmt.Println("Failed to enable ASCII escape sequences, please open an issue, this should work...")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
