@@ -18,6 +18,7 @@ package info
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // PagesSource is the location from where we will download the pages.
@@ -32,7 +33,7 @@ func GetDatabasePath() string {
 		os.Exit(1)
 	}
 
-	return dir + "/tldr/tldr.bbolt"
+	return filepath.Join(dir, "tldr", "tldr.bbolt")
 }
 
 // Exists checks if a file exists

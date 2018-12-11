@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/elecprog/tldr/info"
@@ -47,8 +48,21 @@ var cmd = &cobra.Command{
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
+		dbPath := info.GetDatabasePath()
+
 		// See if it's a fresh database
-		update = update || !info.Exists(info.GetDatabasePath())
+		if !info.Exists(dbPath) {
+			// Create the folder where the database will reside
+			err := os.MkdirAll(filepath.Dir(dbPath), 0777)
+
+			if err != nil {
+				fmt.Println("error: ", err)
+				os.Exit(1)
+			}
+
+			// We'll build the database
+			update = true
+		}
 
 		// Open or create the database, with a timeout of 1 second
 		// and readonly if we do not have to update it.
