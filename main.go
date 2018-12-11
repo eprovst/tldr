@@ -34,6 +34,8 @@ var cmd = &cobra.Command{
 	Version: "v0.1.0",
 	Short:   "Go command line client for tldr",
 
+	DisableFlagsInUseLine: true,
+
 	Args: func(cmd *cobra.Command, args []string) error {
 		// If we do not have to update the database:
 		// we need at least one argument
@@ -75,6 +77,8 @@ var cmd = &cobra.Command{
 
 func main() {
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
+
+	cmd.SetVersionTemplate("tldr {{.Version}} on " + info.OsName + "\n")
 
 	// Execute the command
 	if err := cmd.Execute(); err != nil {
