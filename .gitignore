@@ -1,3 +1,6 @@
+# Skip the build directory
+build/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
