@@ -28,20 +28,28 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-var update = false
+var (
+	update = false
+	list   = false
+)
 
 var cmd = &cobra.Command{
-	Use:     "tldr [-h] [-u] command [command ...]",
+	Use:     "tldr [-h] [-u] [-l [pattern]] command [command ...]",
 	Version: "v0.1.1",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
 
 	Args: func(cmd *cobra.Command, args []string) error {
-		// If we do not have to update the database:
+		// If we do not have to update the database, nor list commands:
 		// we need at least one argument
-		if !update && len(args) == 0 {
+		if !update && !list && len(args) == 0 {
 			return errors.New("missing argument: command")
+		}
+
+		// If we need to list, at most one pattern can be provided
+		if list && len(args) > 1 {
+			return errors.New("too many arguments: expected at most one pattern")
 		}
 
 		return nil
@@ -50,7 +58,7 @@ var cmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		dbPath := pages.GetDatabasePath()
 
-		// See if it's a fresh database
+		// See if it's a first run
 		if !pages.PathExists(dbPath) {
 			// Create the folder where the database will reside
 			err := os.MkdirAll(filepath.Dir(dbPath), 0777)
@@ -85,13 +93,26 @@ var cmd = &cobra.Command{
 		}
 
 		// Now do the lookups
-		pages.Show(db, args)
+		if list {
+			if len(args) == 1 {
+				pages.List(db, args[0])
+
+			} else {
+				pages.List(db, "")
+			}
+
+		} else {
+			pages.Show(db, args)
+		}
 	},
 }
 
 func main() {
+	// Add flags
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
+	cmd.Flags().BoolVarP(&list, "list", "l", false, "list all pages (which contain the pattern)")
 
+	// Change version string
 	cmd.SetVersionTemplate("tldr {{.Version}} on " + targets.OsName + "\n")
 
 	// Execute the command

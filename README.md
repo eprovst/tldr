@@ -27,4 +27,16 @@ This client downloads all tldr pages on the first run (resulting in a database o
 tldr -u
 ```
 
+To see what commands are currently in the database use:
+
+```
+tldr -l
+```
+
+If you want all the commands containing a pattern, let's say `tar`, use:
+
+```
+tldr -l tar
+```
+
 The database is then stored in the cache directory of your platform.
