@@ -64,51 +64,26 @@ func prettyPrint(command string, page []byte) {
 	for _, line := range strings.Split(string(page), "\n") {
 		line = strings.TrimSpace(line)
 
-		if strings.HasPrefix(line, "#") {
-			line = strings.TrimPrefix(line, "#")
-
-			for _, part := range processLine(line) {
-				fmt.Print(aurora.Bold(part))
-			}
-			fmt.Println()
-
-		} else if strings.HasPrefix(line, ">") {
-			line = strings.TrimPrefix(line, ">")
-			line = strings.TrimSpace(line)
-
-			for _, part := range processLine(line) {
-				fmt.Print(part)
-			}
-			fmt.Println()
-
-		} else if strings.HasPrefix(line, "-") {
-			line = strings.TrimPrefix(line, "-")
-			line = strings.TrimSpace(line)
-
-			fmt.Print("\n- ")
-
-			for _, part := range processLine(line) {
-				switch part := part.(type) {
-				case aurora.Value:
-					fmt.Print(part)
-
-				default:
-					fmt.Print(aurora.Green(part).Bold())
-				}
-			}
-			fmt.Println()
-
-		} else if line == "" {
+		if len(line) == 0 {
 			// Skip empty lines
+			continue
+		}
 
-		} else {
+		switch line[0] {
+		case '#':
+			processLine(line[1:], aurora.BoldFm)
+
+		case '>':
+			processLine(line[1:], 0)
+
+		case '-':
+			fmt.Print("\n- ")
+			processLine(line[1:], aurora.GreenFg|aurora.BoldFm)
+
+		default:
 			// Print the parsed line
 			fmt.Print("  ")
-
-			for _, part := range processLine(line) {
-				fmt.Print(part)
-			}
-			fmt.Println()
+			processLine(line, 0)
 		}
 	}
 
@@ -116,12 +91,9 @@ func prettyPrint(command string, page []byte) {
 	fmt.Println()
 }
 
-func processLine(line string) []interface{} {
+func processLine(line string, defaultStyle aurora.Color) {
 	// Remove unneeded spaces
 	line = strings.TrimSpace(line)
-
-	// Ugly parsing number one
-	parts := []interface{}{}
 
 	// Our parsing method would fail on ``, but as
 	// these a no-ops we can safely remove them.
@@ -136,11 +108,11 @@ func processLine(line string) []interface{} {
 
 		if inVerbatim {
 			// Verbatim
-			parts = append(parts, processVerbatim(part)...)
+			processVerbatim(part)
 
 		} else {
 			// Normal text
-			parts = append(parts, part)
+			fmt.Print(aurora.Colorize(part, defaultStyle))
 		}
 
 		inVerbatim = !inVerbatim
@@ -150,13 +122,11 @@ func processLine(line string) []interface{} {
 	// But that check is not regular, and pages should be valid,
 	// so in theory we never have a case where the backticks aren't balanced.
 
-	return parts
+	// Go to the next line
+	fmt.Println()
 }
 
-func processVerbatim(verbatim string) []interface{} {
-	// Ugly parsing number two
-	parts := []interface{}{}
-
+func processVerbatim(verbatim string) {
 	// Our parsing method would fail on {{}} or }}{{, but as
 	// these a no-ops we can safely remove them.
 	verbatim = strings.Replace(verbatim, "{{}}", "", -1)
@@ -167,11 +137,11 @@ func processVerbatim(verbatim string) []interface{} {
 		for _, part := range strings.Split(segment, "}}") {
 			if inOptional {
 				// Optional
-				parts = append(parts, part)
+				fmt.Print(part)
 
 			} else {
 				// Verbatim
-				parts = append(parts, aurora.Red(part).Bold())
+				fmt.Print(aurora.Red(part).Bold())
 			}
 
 			inOptional = !inOptional
@@ -181,7 +151,4 @@ func processVerbatim(verbatim string) []interface{} {
 	// As you might have noticed, we never check if the braces are balanced.
 	// But that check is not regular, and pages should be valid,
 	// so in theory we never have a case where the braces aren't balanced.
-
-	// Return the parsed line
-	return parts
 }
