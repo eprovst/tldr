@@ -14,6 +14,14 @@ go install github.com/elecprog/tldr
 
 or download a binary for Linux or Windows from the [release page](https://github.com/elecprog/tldr/releases/latest/).
 
+### Bash completion
+On platforms that support it you can add bash completion by running:
+
+```
+sudo env "PATH=$PATH" sh -c 'tldr --completion > /etc/bash_completion.d/tldr'
+sudo chmod 644 /etc/bash_completion.d/tldr
+```
+
 ## Usage
 - You can print information for one or more commands by using:
   ```

@@ -29,8 +29,9 @@ import (
 )
 
 var (
-	update = false
-	list   = false
+	update          = false
+	list            = false
+	printCompletion = false
 )
 
 var cmd = &cobra.Command{
@@ -41,9 +42,16 @@ var cmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 
 	Args: func(cmd *cobra.Command, args []string) error {
-		// If we do not have to update the database, nor list commands:
+		// If the bash completion has to be printed we can't have
+		// any other arguments
+		if printCompletion && (len(args) > 0 || update || list) {
+			return errors.New("can't have any other flags or arguments if --completion is set")
+		}
+
+		// If we do not have to update the database, list commands
+		// nor print the bash completion:
 		// we need at least one argument
-		if !update && !list && len(args) == 0 {
+		if !update && !list && !printCompletion && len(args) == 0 {
 			return errors.New("missing argument: command")
 		}
 
@@ -56,6 +64,13 @@ var cmd = &cobra.Command{
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
+		// We only have to print the bash completion, do so
+		if printCompletion {
+			fmt.Println(pages.BashCompletion)
+			return
+		}
+
+		// Get the path where the database is/should be stored
 		dbPath := pages.GetDatabasePath()
 
 		// See if it's a first run
@@ -111,6 +126,10 @@ func main() {
 	// Add flags
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
 	cmd.Flags().BoolVarP(&list, "list", "l", false, "list all pages (which contain the pattern)")
+
+	// Add hidden flags
+	cmd.Flags().BoolVar(&printCompletion, "completion", false, "show the bash autocompletion for tldr")
+	cmd.Flags().MarkHidden("completion")
 
 	// Change version string
 	cmd.SetVersionTemplate("tldr {{.Version}} on " + targets.OsName + "\n")

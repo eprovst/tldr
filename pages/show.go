@@ -50,15 +50,15 @@ func Show(database *bbolt.DB, commands []string) {
 func prettyPrint(command string, page []byte) {
 	// The page is not in the database
 	if page == nil {
-		println()
+		fmt.Println()
 		fmt.Println(aurora.Bold(command), "documentation is not available.")
 		fmt.Println("Consider making a Pull Request to https://github.com/tldr-pages/tldr")
-		println()
+		fmt.Println()
 		return
 	}
 
 	// Add an blank line in front of the page
-	println()
+	fmt.Println()
 
 	// Pretty print the lines in the page
 	for _, line := range strings.Split(string(page), "\n") {
@@ -115,11 +115,11 @@ func prettyPrint(command string, page []byte) {
 			// so in theory we never have a case where the braces aren't balanced.
 
 			// Print the parsed line
-			print("  ")
+			fmt.Print("  ")
 			for _, part := range parts {
 				fmt.Print(part)
 			}
-			println()
+			fmt.Println()
 
 		} else if line == "" {
 			// Skip empty lines
@@ -131,5 +131,5 @@ func prettyPrint(command string, page []byte) {
 	}
 
 	// Add an extra blank line at the end of the page
-	println()
+	fmt.Println()
 }

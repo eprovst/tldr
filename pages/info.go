@@ -27,6 +27,15 @@ const pagesSource = "https://tldr.sh/assets/tldr.zip"
 // pagesBucket is the name of the bucket containing the pages
 var pagesBucket = []byte("pages")
 
+// BashCompletion is a bashcompletion script for tldr
+const BashCompletion = `#/usr/bin/env bash
+_tldr_completion()
+{
+  COMPREPLY=($(tldr -l ${COMP_WORDS[-1]}))
+}
+
+complete -F _tldr_completion tldr`
+
 // GetDatabasePath returns the path to the database or panics if the system
 // does not have a cache directory.
 func GetDatabasePath() string {

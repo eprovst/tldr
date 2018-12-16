@@ -39,7 +39,7 @@ func List(database *bbolt.DB, pattern string) {
 			return bucket.ForEach(
 				func(page, _ []byte) error {
 					if bytes.Contains(page, patternB) {
-						println(string(page))
+						fmt.Println(string(page))
 					}
 
 					return nil
