@@ -36,7 +36,7 @@ var (
 
 var cmd = &cobra.Command{
 	Use:     "tldr [-h] [-u] [-l [pattern]] command [command ...]",
-	Version: "v0.1.1",
+	Version: "v0.2.0",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
