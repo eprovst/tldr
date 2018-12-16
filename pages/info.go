@@ -31,7 +31,11 @@ var pagesBucket = []byte("pages")
 const BashCompletion = `#/usr/bin/env bash
 _tldr_completion()
 {
-  COMPREPLY=($(tldr -l ${COMP_WORDS[-1]}))
+	if [[ "${COMP_WORDS[-1]}" == "-"* ]]; then
+		COMPREPLY=($(compgen -W "--update --list --help" -- ${COMP_WORDS[-1]}))
+	else
+        COMPREPLY=($(tldr --list ${COMP_WORDS[-1]}))
+	fi
 }
 
 complete -F _tldr_completion tldr`
