@@ -96,10 +96,11 @@ func downloadZip(url string) (*zip.Reader, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
 	// Read the entire body into a byte array
 	zipFile, err := ioutil.ReadAll(resp.Body)
+
+	// Close the body
+	resp.Body.Close()
 
 	if err != nil {
 		return nil, err

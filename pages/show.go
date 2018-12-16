@@ -16,11 +16,21 @@
 package pages
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/logrusorgru/aurora"
 	"go.etcd.io/bbolt"
+)
+
+const (
+	normal      = aurora.Color(0)
+	heading     = aurora.BoldFm
+	note        = normal
+	description = aurora.GreenFg | aurora.BoldFm
+	verbatim    = aurora.BoldFm | aurora.RedFg
+	example     = normal
 )
 
 // Show shows help for a command
@@ -30,11 +40,11 @@ func Show(database *bbolt.DB, commands []string) {
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket, creating it if it doesn't yet exist
 			tx.CreateBucketIfNotExists(pagesBucket)
-			buck := tx.Bucket(pagesBucket)
+			bucket := tx.Bucket(pagesBucket)
 
 			// Print all the given commands
 			for _, command := range commands {
-				page := buck.Get([]byte(command))
+				page := bucket.Get([]byte(command))
 				prettyPrint(command, page)
 			}
 
@@ -50,10 +60,8 @@ func Show(database *bbolt.DB, commands []string) {
 func prettyPrint(command string, page []byte) {
 	// The page is not in the database
 	if page == nil {
-		fmt.Println()
-		fmt.Println(aurora.Bold(command), "documentation is not available.")
-		fmt.Println("Consider making a Pull Request to https://github.com/tldr-pages/tldr")
-		fmt.Println()
+		fmt.Print("\n  ", aurora.Colorize(command, heading), " documentation is not available.")
+		fmt.Print("\n  ", "Consider making a Pull Request to https://github.com/tldr-pages/tldr", "\n\n")
 		return
 	}
 
@@ -61,8 +69,8 @@ func prettyPrint(command string, page []byte) {
 	fmt.Println()
 
 	// Pretty print the lines in the page
-	for _, line := range strings.Split(string(page), "\n") {
-		line = strings.TrimSpace(line)
+	for _, lineB := range bytes.Split(page, []byte{'\n'}) {
+		line := string(bytes.TrimSpace(lineB))
 
 		if len(line) == 0 {
 			// Skip empty lines
@@ -71,19 +79,20 @@ func prettyPrint(command string, page []byte) {
 
 		switch line[0] {
 		case '#':
-			processLine(line[1:], aurora.BoldFm)
+			fmt.Print("  ")
+			processLine(line[1:], heading)
 
 		case '>':
-			processLine(line[1:], 0)
+			fmt.Print("  ")
+			processLine(line[1:], note)
 
 		case '-':
 			fmt.Print("\n- ")
-			processLine(line[1:], aurora.GreenFg|aurora.BoldFm)
+			processLine(line[1:], description)
 
 		default:
-			// Print the parsed line
 			fmt.Print("  ")
-			processLine(line, 0)
+			processLine(line, normal)
 		}
 	}
 
@@ -126,25 +135,25 @@ func processLine(line string, defaultStyle aurora.Color) {
 	fmt.Println()
 }
 
-func processVerbatim(verbatim string) {
+func processVerbatim(line string) {
 	// Our parsing method would fail on {{}} or }}{{, but as
 	// these a no-ops we can safely remove them.
-	verbatim = strings.Replace(verbatim, "{{}}", "", -1)
-	verbatim = strings.Replace(verbatim, "}}{{", "", -1)
+	line = strings.Replace(line, "{{}}", "", -1)
+	line = strings.Replace(line, "}}{{", "", -1)
 
-	inOptional := strings.HasPrefix(verbatim, "{{")
-	for _, segment := range strings.Split(verbatim, "{{") {
+	inExample := strings.HasPrefix(line, "{{")
+	for _, segment := range strings.Split(line, "{{") {
 		for _, part := range strings.Split(segment, "}}") {
-			if inOptional {
+			if inExample {
 				// Optional
-				fmt.Print(part)
+				fmt.Print(aurora.Colorize(part, example))
 
 			} else {
 				// Verbatim
-				fmt.Print(aurora.Red(part).Bold())
+				fmt.Print(aurora.Colorize(part, verbatim))
 			}
 
-			inOptional = !inOptional
+			inExample = !inExample
 		}
 	}
 
