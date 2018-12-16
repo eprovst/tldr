@@ -35,10 +35,20 @@ func List(database *bbolt.DB, pattern string) {
 			tx.CreateBucketIfNotExists(pagesBucket)
 			bucket := tx.Bucket(pagesBucket)
 
-			// Print all the pages that contain the pattern
+			// Print all the pages that start with the pattern
+			bucket.ForEach(
+				func(page, _ []byte) error {
+					if bytes.HasPrefix(page, patternB) {
+						fmt.Println(string(page))
+					}
+
+					return nil
+				})
+
+			// Print all the pages that contain the pattern but don't start with it
 			return bucket.ForEach(
 				func(page, _ []byte) error {
-					if bytes.Contains(page, patternB) {
+					if !bytes.HasPrefix(page, patternB) && bytes.Contains(page, patternB) {
 						fmt.Println(string(page))
 					}
 

@@ -28,7 +28,7 @@ const pagesSource = "https://tldr.sh/assets/tldr.zip"
 var pagesBucket = []byte("pages")
 
 // BashCompletion is a bashcompletion script for tldr
-const BashCompletion = `#/usr/bin/env bash
+const BashCompletion = `#!/bin/bash
 _tldr_completion()
 {
 	if [[ "${COMP_WORDS[-1]}" == "-"* ]]; then
