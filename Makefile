@@ -1,4 +1,4 @@
-build: main.go info/*.go pages/*.go
+build: main.go targets/*.go pages/*.go
 	@GOARCH=amd64 GOOS=linux go build -o build/tldr -ldflags "-s -w"
 	@upx build/tldr > /dev/null
 	@GOARCH=amd64 GOOS=windows go build -o build/tldr.exe -ldflags "-s -w"
