@@ -2,7 +2,15 @@ tldr
 ====
 
 A [tldr](https://github.com/tldr-pages/tldr) client in Go, focusing on speed by storing pages in a database.
-The choice of Go also allows us to support all platforms which Go compiles to.
+
+tldr is a collection of simplified, community-driven man pages. This application provides a fast and convenient access to these pages from the command line.
+
+Here you see this client displaying the tldr page for Go:
+![screenshot](screenshot.png)
+
+As already mentioned is this client written in Go, we also uses etcd's [bbolt database](https://github.com/etcd-io/bbolt) which makes this client super fast.
+
+Apart from being fast, the choice of Go also allows us to support all platforms which Go compiles to.
 
 ## Installation
 You can use [Go](https://golang.org/)'s tooling
