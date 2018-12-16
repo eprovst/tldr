@@ -66,58 +66,35 @@ func prettyPrint(command string, page []byte) {
 
 		if strings.HasPrefix(line, "#") {
 			line = strings.TrimPrefix(line, "#")
-			line = strings.TrimSpace(line)
 
-			fmt.Println(aurora.Bold(line))
+			for _, part := range processLine(line) {
+				fmt.Print(aurora.Bold(part))
+			}
+			fmt.Println()
 
 		} else if strings.HasPrefix(line, ">") {
 			line = strings.TrimPrefix(line, ">")
 			line = strings.TrimSpace(line)
 
-			fmt.Println(line)
+			for _, part := range processLine(line) {
+				fmt.Print(part)
+			}
+			fmt.Println()
 
 		} else if strings.HasPrefix(line, "-") {
 			line = strings.TrimPrefix(line, "-")
 			line = strings.TrimSpace(line)
 
-			fmt.Println("\n-", aurora.Green(line).Bold())
+			fmt.Print("\n- ")
 
-		} else if strings.HasPrefix(line, "`") && strings.HasSuffix(line, "`") {
-			line = strings.TrimPrefix(line, "`")
-			line = strings.TrimSuffix(line, "`")
+			for _, part := range processLine(line) {
+				switch part := part.(type) {
+				case aurora.Value:
+					fmt.Print(part)
 
-			line = strings.TrimSpace(line)
-
-			// Some ugly parsing...
-			parts := []interface{}{}
-
-			// Our parsing method would fail on {{}} or }}{{, but as
-			// these a no-ops we can safely remove them.
-			line = strings.Replace(line, "{{}}", "", -1)
-			line = strings.Replace(line, "}}{{", "", -1)
-
-			inVerbatim := !strings.HasPrefix(line, "{{")
-			for _, segment := range strings.Split(line, "{{") {
-				for _, part := range strings.Split(segment, "}}") {
-					if inVerbatim {
-						parts = append(parts, aurora.Red(part).Bold())
-
-					} else {
-						parts = append(parts, part)
-					}
-
-					inVerbatim = !inVerbatim
+				default:
+					fmt.Print(aurora.Green(part).Bold())
 				}
-			}
-
-			// As you might have noticed, we never check if the braces are balanced.
-			// But that check is not regular, and pages should be valid,
-			// so in theory we never have a case where the braces aren't balanced.
-
-			// Print the parsed line
-			fmt.Print("  ")
-			for _, part := range parts {
-				fmt.Print(part)
 			}
 			fmt.Println()
 
@@ -125,11 +102,86 @@ func prettyPrint(command string, page []byte) {
 			// Skip empty lines
 
 		} else {
-			// Simply show invalid lines without formatting
-			fmt.Println(line)
+			// Print the parsed line
+			fmt.Print("  ")
+
+			for _, part := range processLine(line) {
+				fmt.Print(part)
+			}
+			fmt.Println()
 		}
 	}
 
 	// Add an extra blank line at the end of the page
 	fmt.Println()
+}
+
+func processLine(line string) []interface{} {
+	// Remove unneeded spaces
+	line = strings.TrimSpace(line)
+
+	// Ugly parsing number one
+	parts := []interface{}{}
+
+	// Our parsing method would fail on ``, but as
+	// these a no-ops we can safely remove them.
+	line = strings.Replace(line, "``", "", -1)
+
+	inVerbatim := line[0] == '`'
+	for _, part := range strings.Split(line, "`") {
+		// Skip empty strings
+		if len(part) == 0 {
+			continue
+		}
+
+		if inVerbatim {
+			// Verbatim
+			parts = append(parts, processVerbatim(part)...)
+
+		} else {
+			// Normal text
+			parts = append(parts, part)
+		}
+
+		inVerbatim = !inVerbatim
+	}
+
+	// As you might have noticed, we never check if the backticks are balanced.
+	// But that check is not regular, and pages should be valid,
+	// so in theory we never have a case where the backticks aren't balanced.
+
+	return parts
+}
+
+func processVerbatim(verbatim string) []interface{} {
+	// Ugly parsing number two
+	parts := []interface{}{}
+
+	// Our parsing method would fail on {{}} or }}{{, but as
+	// these a no-ops we can safely remove them.
+	verbatim = strings.Replace(verbatim, "{{}}", "", -1)
+	verbatim = strings.Replace(verbatim, "}}{{", "", -1)
+
+	inOptional := strings.HasPrefix(verbatim, "{{")
+	for _, segment := range strings.Split(verbatim, "{{") {
+		for _, part := range strings.Split(segment, "}}") {
+			if inOptional {
+				// Optional
+				parts = append(parts, part)
+
+			} else {
+				// Verbatim
+				parts = append(parts, aurora.Red(part).Bold())
+			}
+
+			inOptional = !inOptional
+		}
+	}
+
+	// As you might have noticed, we never check if the braces are balanced.
+	// But that check is not regular, and pages should be valid,
+	// so in theory we never have a case where the braces aren't balanced.
+
+	// Return the parsed line
+	return parts
 }

@@ -88,7 +88,7 @@ var cmd = &cobra.Command{
 		}
 
 		// Open or create the database, with a timeout of 1 second
-		// and readonly if we do not have to update it.
+		// and read only if we do not have to update it.
 		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
