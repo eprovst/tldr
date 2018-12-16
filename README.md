@@ -18,7 +18,7 @@ or download a binary for Linux or Windows from the [release page](https://github
 On platforms that support it you can add bash completion by running:
 
 ```
-sudo env "PATH=$PATH" sh -c 'tldr --completion > /etc/bash_completion.d/tldr'
+sudo env "PATH=$PATH" sh -c "tldr --completion > /etc/bash_completion.d/tldr"
 sudo chmod 644 /etc/bash_completion.d/tldr
 ```
 
