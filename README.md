@@ -46,5 +46,5 @@ sudo chmod 644 /etc/bash_completion.d/tldr
   ```
 - If you want all the commands containing a pattern, let's say `tar`, use:
   ```
-  tldr -l tar
+  tldr -s tar
   ```

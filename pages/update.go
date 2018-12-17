@@ -18,6 +18,7 @@ package pages
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -39,19 +40,18 @@ func Update(database *bbolt.DB) {
 		os.Exit(1)
 	}
 
-	// Remove the old bucket, if it exists
-	database.Update(
-		func(tx *bbolt.Tx) error {
-			tx.DeleteBucket(pagesBucket)
-			return nil
-		})
+	// Clear the old database
+	Clear(database)
 
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
 			// Create a new pages bucket
-			tx.CreateBucket(pagesBucket)
-			buck := tx.Bucket(pagesBucket)
+			bucket, _ := tx.CreateBucket(pagesBucket)
+
+			if bucket == nil {
+				return errors.New("failed to remove old database")
+			}
 
 			// Read in all pages
 			for _, file := range zipReader.File {
@@ -74,7 +74,7 @@ func Update(database *bbolt.DB) {
 					}
 
 					// Write the page
-					buck.Put([]byte(command), out)
+					bucket.Put([]byte(command), out)
 				}
 			}
 

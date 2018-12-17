@@ -21,24 +21,13 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// List shows all commands
-func List(database *bbolt.DB) {
-	err := database.View(
+// Clear removes the entire database
+func Clear(database *bbolt.DB) {
+	// Remove the old bucket, if it exists
+	err := database.Update(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket
-			bucket := tx.Bucket(pagesBucket)
-
-			if bucket == nil {
-				emptyDatabase()
-				return nil
-			}
-
-			// Print all the pages
-			return bucket.ForEach(
-				func(page, _ []byte) error {
-					fmt.Println(string(page))
-					return nil
-				})
+			tx.DeleteBucket(pagesBucket)
+			return nil
 		})
 
 	// Has something gone wrong?

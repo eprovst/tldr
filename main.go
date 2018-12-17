@@ -30,41 +30,45 @@ import (
 
 // Flags
 var (
-	update          = false
-	list            = false
+	update  = false
+	listAll = false
+	list    = false
+	clear   = false
+	search  = ""
+	render  = ""
+
 	printCompletion = false
-	render          = ""
 )
 
 var cmd = &cobra.Command{
-	Use:     "tldr [-h] [-u] [-l [pattern]] command [command ...]",
+	Use:     "tldr [flags] command [command ...]",
 	Version: "v0.2.0",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
 
 	Args: func(cmd *cobra.Command, args []string) error {
-		// If the bash completion has to be printed we can't have
-		// any other arguments
-		if printCompletion && (len(args) > 0 || update || list || render != "") {
-			return errors.New("can't have any other flags or arguments if --completion is set")
-		}
-
-		// If we do not have to update the database, list commands
-		// print the bash completion nor render a page:
-		// we need at least one argument
-		if !update && !list && render == "" && !printCompletion && len(args) == 0 {
+		// If we don't have to do anything special, we need at least one command
+		if cmd.Flags().NFlag() == 0 && len(args) == 0 {
 			return errors.New("missing argument: command")
 		}
 
-		// If we need to list, at most one pattern can be provided
-		if list && len(args) > 1 {
-			return errors.New("too many arguments: expected at most one pattern")
+		// See if we have too many flags
+		numFlags := cmd.Flags().NFlag()
+
+		// Update doesn't realy count
+		if update {
+			numFlags--
 		}
 
-		// If we have to render a page, no other arguments can be given
-		if render != "" && (len(args) > 0 || update || list) {
-			return errors.New("can't have any other flags or arguments if --render is set")
+		// We can't have arguments and flags
+		if numFlags > 0 && len(args) > 0 {
+			return errors.New("too many arguments: expected none")
+		}
+
+		// We can't have multiple flags set
+		if numFlags > 1 {
+			return errors.New("at most one flag can be set")
 		}
 
 		return nil
@@ -105,7 +109,7 @@ var cmd = &cobra.Command{
 		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
-				ReadOnly: !update,
+				ReadOnly: !update && !clear,
 			})
 
 		if err != nil {
@@ -115,21 +119,32 @@ var cmd = &cobra.Command{
 
 		defer db.Close()
 
+		// Clear the database if requested
+		if clear {
+			pages.Clear(db)
+			return
+		}
+
 		// Update the database if needed
 		if update {
 			pages.Update(db)
+			// We might want to do other stuff though
 		}
 
-		// Now do the lookups
-		if list {
-			if len(args) == 1 {
-				pages.List(db, args[0])
+		// Do we have to list commands?
+		if list || listAll {
+			pages.List(db)
+			return
+		}
 
-			} else {
-				pages.List(db, "")
-			}
+		// Search.
+		if cmd.Flag("search").Changed {
+			pages.Search(db, search)
+			return
+		}
 
-		} else {
+		// No, we simply want to see tldr pages :)
+		if len(args) > 0 {
 			pages.Show(db, args)
 		}
 	},
@@ -138,8 +153,14 @@ var cmd = &cobra.Command{
 func main() {
 	// Add flags
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
-	cmd.Flags().BoolVarP(&list, "list", "l", false, "list all pages (which contain the pattern)")
-	cmd.Flags().StringVar(&render, "render", "", "render local page")
+	cmd.Flags().BoolVar(&list, "list", false, "list all pages for the current platform")
+	cmd.Flags().BoolVar(&clear, "clear-cache", false, "clear database")
+	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands containing `pattern`")
+	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
+
+	// Flag is currently useless
+	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
+	cmd.Flags().MarkHidden("list-all")
 
 	// Add hidden flags
 	cmd.Flags().BoolVar(&printCompletion, "completion", false, "show the bash autocompletion for tldr")

@@ -26,9 +26,13 @@ func Show(database *bbolt.DB, commands []string) {
 	// Get the page
 	err := database.View(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket, creating it if it doesn't yet exist
-			tx.CreateBucketIfNotExists(pagesBucket)
+			// Open the pages bucket
 			bucket := tx.Bucket(pagesBucket)
+
+			if bucket == nil {
+				emptyDatabase()
+				return nil
+			}
 
 			// Print all the given commands
 			for _, command := range commands {

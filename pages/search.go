@@ -16,13 +16,19 @@
 package pages
 
 import (
+	"bytes"
 	"fmt"
 
 	"go.etcd.io/bbolt"
 )
 
-// List shows all commands
-func List(database *bbolt.DB) {
+// Search shows all pages that contain the pattern
+func Search(database *bbolt.DB, pattern string) {
+	// We get page names as byte arrays
+	patternB := []byte(pattern)
+
+	// Iterate through keys, printing all that match the pattern,
+	// as keys are byte ordered, they are also in alphabethic order.
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
@@ -33,10 +39,23 @@ func List(database *bbolt.DB) {
 				return nil
 			}
 
-			// Print all the pages
+			// Print all the pages that start with the pattern
+			bucket.ForEach(
+				func(page, _ []byte) error {
+					if bytes.HasPrefix(page, patternB) {
+						fmt.Println(string(page))
+					}
+
+					return nil
+				})
+
+			// Print all the pages that contain the pattern but don't start with it
 			return bucket.ForEach(
 				func(page, _ []byte) error {
-					fmt.Println(string(page))
+					if !bytes.HasPrefix(page, patternB) && bytes.Contains(page, patternB) {
+						fmt.Println(string(page))
+					}
+
 					return nil
 				})
 		})

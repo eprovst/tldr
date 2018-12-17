@@ -18,6 +18,7 @@ package pages
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/logrusorgru/aurora"
@@ -32,10 +33,17 @@ const (
 	example     = normal
 )
 
+func emptyDatabase() {
+	// The database is empty
+	fmt.Fprint(os.Stderr, "\n  ", "The database is empty.")
+	fmt.Fprint(os.Stderr, "\n  ", "You can try updating the database using ", aurora.Colorize("tldr --update", verbatim), ".\n\n")
+}
+
 func pageUnavailable(command string) {
 	// The page is not in the database
 	fmt.Print("\n  ", aurora.Colorize(command, heading), " documentation is not available.")
-	fmt.Print("\n  ", "Consider making a Pull Request to https://github.com/tldr-pages/tldr", "\n\n")
+	fmt.Print("\n  ", "You can try updating the database using ", aurora.Colorize("tldr --update", verbatim), ".")
+	fmt.Print("\n  ", "Or add a page yourself to https://github.com/tldr-pages/tldr.", "\n\n")
 }
 
 func prettyPrint(page []byte) {
