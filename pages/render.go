@@ -17,36 +17,26 @@ package pages
 
 import (
 	"fmt"
-
-	"go.etcd.io/bbolt"
+	"io/ioutil"
+	"os"
 )
 
-// Show shows help for a command
-func Show(database *bbolt.DB, commands []string) {
-	// Get the page
-	err := database.View(
-		func(tx *bbolt.Tx) error {
-			// Open the pages bucket, creating it if it doesn't yet exist
-			tx.CreateBucketIfNotExists(pagesBucket)
-			bucket := tx.Bucket(pagesBucket)
+// Render shows a rendered view of a page
+func Render(path string) {
+	file, err := os.Open(path)
 
-			// Print all the given commands
-			for _, command := range commands {
-				page := bucket.Get([]byte(command))
-
-				if page == nil {
-					pageUnavailable(command)
-
-				} else {
-					prettyPrint(page)
-				}
-			}
-
-			return nil
-		})
-
-	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Println("error:", err)
+		os.Exit(1)
 	}
+
+	page, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
+	}
+
+	// Now print the page
+	prettyPrint(page)
 }

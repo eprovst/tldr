@@ -28,10 +28,12 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+// Flags
 var (
 	update          = false
 	list            = false
 	printCompletion = false
+	render          = ""
 )
 
 var cmd = &cobra.Command{
@@ -44,14 +46,14 @@ var cmd = &cobra.Command{
 	Args: func(cmd *cobra.Command, args []string) error {
 		// If the bash completion has to be printed we can't have
 		// any other arguments
-		if printCompletion && (len(args) > 0 || update || list) {
+		if printCompletion && (len(args) > 0 || update || list || render != "") {
 			return errors.New("can't have any other flags or arguments if --completion is set")
 		}
 
 		// If we do not have to update the database, list commands
-		// nor print the bash completion:
+		// print the bash completion nor render a page:
 		// we need at least one argument
-		if !update && !list && !printCompletion && len(args) == 0 {
+		if !update && !list && render == "" && !printCompletion && len(args) == 0 {
 			return errors.New("missing argument: command")
 		}
 
@@ -60,13 +62,24 @@ var cmd = &cobra.Command{
 			return errors.New("too many arguments: expected at most one pattern")
 		}
 
+		// If we have to render a page, no other arguments can be given
+		if render != "" && (len(args) > 0 || update || list) {
+			return errors.New("can't have any other flags or arguments if --render is set")
+		}
+
 		return nil
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		// We only have to print the bash completion, do so
+		// If we only have to print the bash completion, do so
 		if printCompletion {
 			fmt.Println(pages.BashCompletion)
+			return
+		}
+
+		// Are we asked to render a page?
+		if render != "" {
+			pages.Render(render)
 			return
 		}
 
@@ -126,6 +139,7 @@ func main() {
 	// Add flags
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
 	cmd.Flags().BoolVarP(&list, "list", "l", false, "list all pages (which contain the pattern)")
+	cmd.Flags().StringVar(&render, "render", "", "render local page")
 
 	// Add hidden flags
 	cmd.Flags().BoolVar(&printCompletion, "completion", false, "show the bash autocompletion for tldr")

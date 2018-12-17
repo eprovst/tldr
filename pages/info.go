@@ -31,14 +31,18 @@ var pagesBucket = []byte("pages")
 const BashCompletion = `#!/bin/bash
 _tldr_completion()
 {
-    if [[ "${COMP_WORDS[-1]}" == "-"* ]]; then
-        COMPREPLY=($(compgen -W "--update --list --help" -- ${COMP_WORDS[-1]}))
+    if [[ "${COMP_WORDS[$COMP_CWORD]}" == "-"* ]]; then
+        COMPREPLY=($(compgen -W "--update --list --help --render" -- ${COMP_WORDS[$COMP_CWORD]}))
     else
-        COMPREPLY=($(tldr --list ${COMP_WORDS[-1]}))
+        if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "--render" ]]; then
+            COMPREPLY=()
+        else
+            COMPREPLY=($(tldr --list ${COMP_WORDS[$COMP_CWORD]}))
+        fi
     fi
 }
 
-complete -F _tldr_completion tldr`
+complete -o default -F _tldr_completion tldr`
 
 // GetDatabasePath returns the path to the database or panics if the system
 // does not have a cache directory.
