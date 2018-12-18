@@ -19,49 +19,54 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
 // Search shows all pages that contain the pattern
 func Search(database *bbolt.DB, pattern string) {
-	// We get page names as byte arrays
-	patternB := []byte(pattern)
+	// TODO: Sorting of output
 
 	// Iterate through keys, printing all that match the pattern,
 	// as keys are byte ordered, they are also in alphabethic order.
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
-			bucket := tx.Bucket(pagesBucket)
+			root := tx.Bucket(rootBucket)
 
-			if bucket == nil {
+			if root == nil {
 				emptyDatabase()
 				return nil
 			}
 
-			// Print all the pages that start with the pattern
-			bucket.ForEach(
-				func(page, _ []byte) error {
-					if bytes.HasPrefix(page, patternB) {
-						fmt.Println(string(page))
-					}
-
-					return nil
-				})
-
-			// Print all the pages that contain the pattern but don't start with it
-			return bucket.ForEach(
-				func(page, _ []byte) error {
-					if !bytes.HasPrefix(page, patternB) && bytes.Contains(page, patternB) {
-						fmt.Println(string(page))
-					}
-
-					return nil
-				})
+			searchInBucket(root.Bucket(commonBucket), []byte(pattern))
+			return searchInBucket(root.Bucket([]byte(targets.OsDir)), []byte(pattern))
 		})
 
 	// Has something gone wrong?
 	if err != nil {
 		fmt.Println("warning:", err)
 	}
+}
+
+func searchInBucket(bucket *bbolt.Bucket, pattern []byte) error {
+	// Print all the pages that start with the pattern
+	bucket.ForEach(
+		func(page, _ []byte) error {
+			if bytes.HasPrefix(page, pattern) {
+				fmt.Println(string(page))
+			}
+
+			return nil
+		})
+
+	// Print all the pages that contain the pattern but don't start with it
+	return bucket.ForEach(
+		func(page, _ []byte) error {
+			if !bytes.HasPrefix(page, pattern) && bytes.Contains(page, pattern) {
+				fmt.Println(string(page))
+			}
+
+			return nil
+		})
 }

@@ -22,11 +22,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Information about the current system
-const (
-	OsName = "Windows"
-	OsDir  = "windows"
-)
+// OsName is the name of the current platform
+const OsName = "Windows"
+
+// OsDir is the directory in the tldr pages containing
+// the pages for this platform
+var OsDir = "windows"
 
 // Windows by default ignores ASCII escape codes,
 // however we can change this using this.

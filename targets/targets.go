@@ -15,9 +15,10 @@
 
 package targets
 
-// OsName is the name of the current platform
-const OsName = "macOS"
-
-// OsDir is the directory in the tldr pages containing
-// the pages for this platform
-var OsDir = "osx"
+// AllTargets are all targets supported by tldr
+var AllTargets = map[string]bool{
+	"osx":     true,
+	"windows": true,
+	"sunos":   true,
+	"linux":   true,
+}

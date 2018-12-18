@@ -19,8 +19,9 @@ package targets
 
 import "runtime"
 
-// Information about the current system
-const (
-	OsName = runtime.GOOS
-	OsDir  = "common"
-)
+// OsName is the name of the current platform
+const OsName = runtime.GOOS
+
+// OsDir is the directory in the tldr pages containing
+// the pages for this platform
+var OsDir = "common"

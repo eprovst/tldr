@@ -15,8 +15,9 @@
 
 package targets
 
-// Information about the current system
-const (
-	OsName = "Linux"
-	OsDir  = "linux"
-)
+// OsName is the name of the current platform
+const OsName = "Linux"
+
+// OsDir is the directory in the tldr pages containing
+// the pages for this platform
+var OsDir = "linux"

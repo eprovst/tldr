@@ -24,18 +24,26 @@ import (
 // pagesSource is the location from where we will download the pages.
 const pagesSource = "https://tldr.sh/assets/tldr.zip"
 
-// pagesBucket is the name of the bucket containing the pages
-var pagesBucket = []byte("pages")
+// commonBucket is the name of the bucket containing the common pages
+var commonBucket = []byte("common")
+
+// rootBucket is the name of the bucket containing all other buckets
+// (in the future will be the bucket with english pages)
+var rootBucket = []byte("pages")
 
 // BashCompletion is a bashcompletion script for tldr
 const BashCompletion = `#!/bin/bash
 _tldr_completion()
 {
 	if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-"* ]]; then
-		COMPREPLY=()
+		if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-p" || "${COMP_WORDS[$COMP_CWORD - 1]}" == "--platform" ]]; then
+			COMPREPLY=($(compgen -W "$(tldr --list-platforms)" -- ${COMP_WORDS[$COMP_CWORD]}))
+		else
+			COMPREPLY=()
+		fi
 	else
 		if [[ "${COMP_WORDS[$COMP_CWORD]}" == "-"* ]]; then
-			COMPREPLY=($(compgen -W "--clear-cache --help --list --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
+			COMPREPLY=($(compgen -W "--help --list --platform --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
 		else
 			COMPREPLY=($(tldr --search "${COMP_WORDS[$COMP_CWORD]}" 2> /dev/null))
 		fi

@@ -47,17 +47,25 @@ func Update(database *bbolt.DB) {
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
 			// Create a new pages bucket
-			bucket, _ := tx.CreateBucket(pagesBucket)
+			root, _ := tx.CreateBucket(rootBucket)
 
-			if bucket == nil {
+			if root == nil {
 				return errors.New("failed to remove old database")
+			}
+
+			// Add buckets for all supported platforms and for common pages
+			targetBuckets := make(map[string]*bbolt.Bucket)
+			targetBuckets["common"], _ = root.CreateBucket(commonBucket)
+
+			for target := range targets.AllTargets {
+				targetBuckets[target], _ = root.CreateBucket([]byte(target))
 			}
 
 			// Read in all pages
 			for _, file := range zipReader.File {
-				if strings.HasPrefix(file.Name, "pages/common/") ||
-					strings.HasPrefix(file.Name, "pages/"+targets.OsDir+"/") {
-
+				// Only add english pages
+				if strings.HasPrefix(file.Name, "pages/") {
+					target := strings.TrimPrefix(path.Dir(file.Name), "pages/")
 					command := strings.TrimSuffix(path.Base(file.Name), ".md")
 
 					// Read the page
@@ -73,8 +81,10 @@ func Update(database *bbolt.DB) {
 						fmt.Println("warning:", err)
 					}
 
-					// Write the page
-					bucket.Put([]byte(command), out)
+					// Write the page to the correct bucket
+					if targetBuckets[target] != nil {
+						targetBuckets[target].Put([]byte(command), out)
+					}
 				}
 			}
 

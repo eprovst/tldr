@@ -30,19 +30,21 @@ import (
 
 // Flags
 var (
-	update  = false
-	listAll = false
-	list    = false
-	clear   = false
-	search  = ""
-	render  = ""
+	update        = false
+	list          = false
+	listAll       = false
+	listPlatforms = false
+	clear         = false
+	platform      = ""
+	search        = ""
+	render        = ""
 
 	printCompletion = false
 )
 
 var cmd = &cobra.Command{
 	Use:     "tldr [flags] command [command ...]",
-	Version: "v0.2.0",
+	Version: "v0.3.0",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
@@ -56,8 +58,12 @@ var cmd = &cobra.Command{
 		// See if we have too many flags
 		numFlags := cmd.Flags().NFlag()
 
-		// Update doesn't realy count
+		// Update and OS don't realy count
 		if update {
+			numFlags--
+		}
+
+		if cmd.Flag("platform").Changed {
 			numFlags--
 		}
 
@@ -82,7 +88,7 @@ var cmd = &cobra.Command{
 		}
 
 		// Are we asked to render a page?
-		if render != "" {
+		if cmd.Flag("render").Changed {
 			pages.Render(render)
 			return
 		}
@@ -119,10 +125,22 @@ var cmd = &cobra.Command{
 
 		defer db.Close()
 
+		// Database management
 		// Clear the database if requested
 		if clear {
 			pages.Clear(db)
 			return
+		}
+
+		// Overide the operating system
+		if cmd.Flag("platform").Changed {
+			if targets.AllTargets[platform] {
+				targets.OsDir = platform
+
+			} else {
+				fmt.Println("error: unsupported platform", platform)
+				os.Exit(1)
+			}
 		}
 
 		// Update the database if needed
@@ -131,13 +149,26 @@ var cmd = &cobra.Command{
 			// We might want to do other stuff though
 		}
 
+		// Other actions
 		// Do we have to list commands?
-		if list || listAll {
+		if list {
 			pages.List(db)
 			return
 		}
 
-		// Search.
+		if listAll {
+			pages.ListAll(db)
+			return
+		}
+
+		// List platforms
+		if listPlatforms {
+			for target := range targets.AllTargets {
+				fmt.Println(target)
+			}
+		}
+
+		// Search?
 		if cmd.Flag("search").Changed {
 			pages.Search(db, search)
 			return
@@ -154,13 +185,12 @@ func main() {
 	// Add flags
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
 	cmd.Flags().BoolVar(&list, "list", false, "list all pages for the current platform")
+	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
 	cmd.Flags().BoolVar(&clear, "clear-cache", false, "clear database")
 	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands containing `pattern`")
 	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
-
-	// Flag is currently useless
-	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
-	cmd.Flags().MarkHidden("list-all")
+	cmd.Flags().StringVarP(&platform, "platform", "p", "", "overide default platform")
+	cmd.Flags().BoolVar(&listPlatforms, "list-platforms", false, "list all supported platforms")
 
 	// Add hidden flags
 	cmd.Flags().BoolVar(&printCompletion, "completion", false, "show the bash autocompletion for tldr")

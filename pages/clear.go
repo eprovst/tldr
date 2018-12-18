@@ -26,7 +26,9 @@ func Clear(database *bbolt.DB) {
 	// Remove the old bucket, if it exists
 	err := database.Update(
 		func(tx *bbolt.Tx) error {
-			tx.DeleteBucket(pagesBucket)
+			// Remove the root bucket
+			tx.DeleteBucket(rootBucket)
+
 			return nil
 		})
 

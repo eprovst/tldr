@@ -18,6 +18,7 @@ package pages
 import (
 	"fmt"
 
+	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
@@ -27,16 +28,24 @@ func Show(database *bbolt.DB, commands []string) {
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
-			bucket := tx.Bucket(pagesBucket)
+			root := tx.Bucket(rootBucket)
 
-			if bucket == nil {
+			if root == nil {
 				emptyDatabase()
 				return nil
 			}
 
+			// Get the local en common pages
+			common := root.Bucket(commonBucket)
+			local := root.Bucket([]byte(targets.OsDir))
+
 			// Print all the given commands
 			for _, command := range commands {
-				page := bucket.Get([]byte(command))
+				page := local.Get([]byte(command))
+
+				if page == nil {
+					page = common.Get([]byte(command))
+				}
 
 				if page == nil {
 					pageUnavailable(command)
