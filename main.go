@@ -58,7 +58,7 @@ var cmd = &cobra.Command{
 		// See if we have too many flags
 		numFlags := cmd.Flags().NFlag()
 
-		// Update and OS don't realy count
+		// Update and platform don't realy count
 		if update {
 			numFlags--
 		}
@@ -110,12 +110,24 @@ var cmd = &cobra.Command{
 			update = true
 		}
 
+		// Purge the database if requested
+		if purge {
+			err := os.Remove(dbPath)
+
+			if err != nil {
+				fmt.Println("error:", err)
+				os.Exit(1)
+			}
+
+			return
+		}
+
 		// Open or create the database, with a timeout of 1 second
 		// and read only if we do not have to update it.
 		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
-				ReadOnly: !update && !purge,
+				ReadOnly: !update,
 			})
 
 		if err != nil {
@@ -124,13 +136,6 @@ var cmd = &cobra.Command{
 		}
 
 		defer db.Close()
-
-		// Database management
-		// Purge the database if requested
-		if purge {
-			pages.Purge(db)
-			return
-		}
 
 		// Overide the operating system
 		if cmd.Flag("platform").Changed {
@@ -184,10 +189,10 @@ var cmd = &cobra.Command{
 func main() {
 	// Add flags
 	cmd.Flags().StringVarP(&platform, "platform", "p", "", "overide default platform")
-	cmd.Flags().BoolVar(&purge, "purge", false, "purge database")
+	cmd.Flags().BoolVar(&purge, "purge", false, "remove database from disk")
 	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
-	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands matching `pattern`")
+	cmd.Flags().StringVarP(&search, "search", "s", "", "list pages matching `pattern`")
 
 	// Here for compatibility sake
 	cmd.Flags().BoolVarP(&purge, "clear-cache", "c", false, "purge database")

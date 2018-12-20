@@ -41,7 +41,18 @@ func Update(database *bbolt.DB) {
 	}
 
 	// Purge the old database
-	Purge(database)
+	err = database.Update(
+		func(tx *bbolt.Tx) error {
+			// Remove the root bucket
+			tx.DeleteBucket(rootBucket)
+
+			return nil
+		})
+
+	// Has something gone wrong?
+	if err != nil {
+		fmt.Println("warning:", err)
+	}
 
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
