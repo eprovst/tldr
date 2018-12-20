@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/elecprog/tldr/targets"
+	"github.com/golang/snappy"
 	"go.etcd.io/bbolt"
 )
 
@@ -84,17 +85,20 @@ func Update(database *bbolt.DB) {
 
 					if err != nil {
 						fmt.Println("warning:", err)
+						continue
 					}
 
 					out, err := ioutil.ReadAll(contents)
+					contents.Close()
 
 					if err != nil {
 						fmt.Println("warning:", err)
+						continue
 					}
 
-					// Write the page to the correct bucket
+					// Compress the page and write it to the correct bucket
 					if targetBuckets[target] != nil {
-						targetBuckets[target].Put([]byte(command), compress(out))
+						targetBuckets[target].Put([]byte(command), snappy.Encode(nil, out))
 					}
 				}
 			}
