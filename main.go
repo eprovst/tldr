@@ -34,7 +34,7 @@ var (
 	list          = false
 	listAll       = false
 	listPlatforms = false
-	clear         = false
+	purge         = false
 	platform      = ""
 	search        = ""
 	render        = ""
@@ -115,7 +115,7 @@ var cmd = &cobra.Command{
 		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
-				ReadOnly: !update && !clear,
+				ReadOnly: !update && !purge,
 			})
 
 		if err != nil {
@@ -126,9 +126,9 @@ var cmd = &cobra.Command{
 		defer db.Close()
 
 		// Database management
-		// Clear the database if requested
-		if clear {
-			pages.Clear(db)
+		// Purge the database if requested
+		if purge {
+			pages.Purge(db)
 			return
 		}
 
@@ -183,18 +183,25 @@ var cmd = &cobra.Command{
 
 func main() {
 	// Add flags
-	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
-	cmd.Flags().BoolVar(&list, "list", false, "list all pages for the current platform")
-	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
-	cmd.Flags().BoolVar(&clear, "clear-cache", false, "clear database")
-	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands matching `pattern`")
-	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
 	cmd.Flags().StringVarP(&platform, "platform", "p", "", "overide default platform")
-	cmd.Flags().BoolVar(&listPlatforms, "list-platforms", false, "list all supported platforms")
+	cmd.Flags().BoolVar(&purge, "purge", false, "purge database")
+	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
+	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
+	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands matching `pattern`")
 
-	// Add hidden flags
-	cmd.Flags().BoolVar(&printCompletion, "completion", false, "show the bash autocompletion for tldr")
-	cmd.Flags().MarkHidden("completion")
+	// Here for compatibility sake
+	cmd.Flags().BoolVarP(&purge, "clear-cache", "c", false, "purge database")
+	cmd.Flags().MarkDeprecated("clear-cache", "use --purge instead")
+
+	// Add hidden scripting flags
+	cmd.Flags().BoolVar(&printCompletion, "bash-completion", false, "show the bash autocompletion for tldr")
+	cmd.Flags().MarkHidden("bash-completion")
+	cmd.Flags().BoolVar(&list, "list", false, "list all pages for the current platform")
+	cmd.Flags().MarkHidden("list")
+	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
+	cmd.Flags().MarkHidden("list-all")
+	cmd.Flags().BoolVar(&listPlatforms, "list-platforms", false, "list all supported platforms")
+	cmd.Flags().MarkHidden("list-platforms")
 
 	// Change version string
 	cmd.SetVersionTemplate("tldr {{.Version}} on " + targets.OsName + "\n")

@@ -21,8 +21,8 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// Clear removes the entire database
-func Clear(database *bbolt.DB) {
+// Purge removes the entire database
+func Purge(database *bbolt.DB) {
 	// Remove the old bucket, if it exists
 	err := database.Update(
 		func(tx *bbolt.Tx) error {

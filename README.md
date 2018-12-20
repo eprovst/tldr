@@ -26,7 +26,7 @@ or download a binary for Linux or Windows from the [release page](https://github
 On platforms that support it you can add bash completion by running:
 
 ```
-sudo env "PATH=$PATH" sh -c "tldr --completion > /etc/bash_completion.d/tldr"
+sudo env "PATH=$PATH" sh -c "tldr --bash-completion > /etc/bash_completion.d/tldr"
 sudo chmod 644 /etc/bash_completion.d/tldr
 ```
 
@@ -40,10 +40,6 @@ sudo chmod 644 /etc/bash_completion.d/tldr
   tldr -u
   ```
   The database is then stored in the cache directory of your platform.
-- To see what commands are currently in the database use:
-  ```
-  tldr -l
-  ```
 - If you want all the commands matching a pattern, let's say `git-*`, use:
   ```
   tldr -s "git-*"

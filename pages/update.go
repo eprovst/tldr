@@ -40,8 +40,8 @@ func Update(database *bbolt.DB) {
 		os.Exit(1)
 	}
 
-	// Clear the old database
-	Clear(database)
+	// Purge the old database
+	Purge(database)
 
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
