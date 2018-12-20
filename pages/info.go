@@ -45,7 +45,7 @@ _tldr_completion()
 		if [[ "${COMP_WORDS[$COMP_CWORD]}" == "-"* ]]; then
 			COMPREPLY=($(compgen -W "--help --list --platform --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
 		else
-			COMPREPLY=($(tldr --search "${COMP_WORDS[$COMP_CWORD]}" 2> /dev/null))
+			COMPREPLY=($(tldr --search "${COMP_WORDS[$COMP_CWORD]}*" 2> /dev/null))
 		fi
 	fi
 }

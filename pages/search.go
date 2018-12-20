@@ -16,7 +16,6 @@
 package pages
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/elecprog/tldr/targets"
@@ -39,8 +38,12 @@ func Search(database *bbolt.DB, pattern string) {
 				return nil
 			}
 
-			searchInBucket(root.Bucket(commonBucket), []byte(pattern))
-			return searchInBucket(root.Bucket([]byte(targets.OsDir)), []byte(pattern))
+			// Create a matcher from the pattern
+			matcher := NewGlobMatcher([]byte(pattern))
+
+			// Search in both the local and the common bucket
+			searchInBucket(root.Bucket([]byte(targets.OsDir)), matcher)
+			return searchInBucket(root.Bucket(commonBucket), matcher)
 		})
 
 	// Has something gone wrong?
@@ -49,21 +52,11 @@ func Search(database *bbolt.DB, pattern string) {
 	}
 }
 
-func searchInBucket(bucket *bbolt.Bucket, pattern []byte) error {
-	// Print all the pages that start with the pattern
-	bucket.ForEach(
-		func(page, _ []byte) error {
-			if bytes.HasPrefix(page, pattern) {
-				fmt.Println(string(page))
-			}
-
-			return nil
-		})
-
-	// Print all the pages that contain the pattern but don't start with it
+func searchInBucket(bucket *bbolt.Bucket, matcher *GlobMatcher) error {
+	// Print all the pages that match the pattern
 	return bucket.ForEach(
 		func(page, _ []byte) error {
-			if !bytes.HasPrefix(page, pattern) && bytes.Contains(page, pattern) {
+			if matcher.Match(page) {
 				fmt.Println(string(page))
 			}
 

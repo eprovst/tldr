@@ -187,7 +187,7 @@ func main() {
 	cmd.Flags().BoolVar(&list, "list", false, "list all pages for the current platform")
 	cmd.Flags().BoolVar(&listAll, "list-all", false, "list all available pages")
 	cmd.Flags().BoolVar(&clear, "clear-cache", false, "clear database")
-	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands containing `pattern`")
+	cmd.Flags().StringVarP(&search, "search", "s", "", "show all commands matching `pattern`")
 	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
 	cmd.Flags().StringVarP(&platform, "platform", "p", "", "overide default platform")
 	cmd.Flags().BoolVar(&listPlatforms, "list-platforms", false, "list all supported platforms")
