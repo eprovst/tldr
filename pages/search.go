@@ -24,8 +24,6 @@ import (
 
 // Search shows all pages that contain the pattern
 func Search(database *bbolt.DB, pattern string) {
-	// TODO: Sorting of output
-
 	// Iterate through keys, printing all that match the pattern,
 	// as keys are byte ordered, they are also in alphabethic order.
 	err := database.View(
@@ -39,7 +37,7 @@ func Search(database *bbolt.DB, pattern string) {
 			}
 
 			// Create a matcher from the pattern
-			matcher := NewGlobMatcher([]byte(pattern))
+			matcher := NewGlobMatcher(pattern)
 
 			// Search in both the local and the common bucket
 			searchInBucket(root.Bucket([]byte(targets.OsDir)), matcher)
@@ -56,8 +54,9 @@ func searchInBucket(bucket *bbolt.Bucket, matcher *GlobMatcher) error {
 	// Print all the pages that match the pattern
 	return bucket.ForEach(
 		func(page, _ []byte) error {
-			if matcher.Match(page) {
-				fmt.Println(string(page))
+			pageS := string(page)
+			if matcher.Match(pageS) {
+				fmt.Println(pageS)
 			}
 
 			return nil

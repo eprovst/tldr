@@ -15,38 +15,40 @@
 
 package pages
 
-import "bytes"
+import (
+	"strings"
+)
 
 // TODO: Work on rune level instead of bytes? Because '?' currently
 // does not support characters longer than one byte.
 
 // We use two special ASCII codes in our pattern building
 const (
-	asciiGS = byte(0x1D)
-	asciiUS = byte(0x1F)
+	asciiGS = rune(0x1D)
+	asciiUS = rune(0x1F)
 )
 
 // GlobMatcher is the matcher built from a GlobPattern
 type GlobMatcher struct {
-	useBytes       bool
-	pattern        []byte
-	dfa            [][]int
+	simplePat      bool
+	pattern        string
+	dfa            []state
 	acceptingState int
 }
 
-// Match matches the text with the pattern
-func (gm GlobMatcher) Match(text []byte) bool {
-	// If we didn't have a glob pattern we can symply use the
-	// bytes function.
-	if gm.useBytes {
-		return bytes.Equal(text, gm.pattern)
+// Match matches the string with the pattern
+func (gm *GlobMatcher) Match(str string) bool {
+	// If we didn't have wildcards in the pattern we can simply use the
+	// equality operator.
+	if gm.simplePat {
+		return str == gm.pattern
 	}
 
-	// No use this DFA to match a pattern
+	// Else use the DFA to match a pattern
 	s := 0
-	for i := range text {
+	for _, c := range str {
 		// Go to the next state
-		s = gm.dfa[text[i]][s]
+		s = gm.dfa[s].getNext(c)
 
 		// Did we come to a point where a match is impossible?
 		if s == -1 {
@@ -65,26 +67,26 @@ func (gm GlobMatcher) Match(text []byte) bool {
 
 // NewGlobMatcher builds a DFA capable of matching the provided pattern.
 // NOTE TO SELF: If this is new, maybe I should write about it...
-func NewGlobMatcher(pattern []byte) *GlobMatcher {
-	if !bytes.ContainsAny(pattern, "*?") {
-		// If no globs are present we shoud use the standard library
+func NewGlobMatcher(pattern string) *GlobMatcher {
+	if !strings.ContainsAny(pattern, "*?") {
+		// If no wildcards are present we shoud use the standard library
 		return &GlobMatcher{
-			useBytes: true,
-			pattern:  pattern,
+			simplePat: true,
+			pattern:   pattern,
 		}
 	}
 
 	// Else use discrete finite automata :)
 	// Parse the pattern, replacing * by GS, \* by *, ? by US, \? by ? and \\ by \
 	escd := false
-	pat := bytes.NewBuffer([]byte{})
-	numberOfGlobs := 0
+	builder := strings.Builder{}
+	numberOfStars := 0
 
 	for _, c := range pattern {
 		switch c {
 		case '\\':
 			if escd {
-				pat.WriteByte('\\')
+				builder.WriteRune('\\')
 				escd = false
 
 			} else {
@@ -93,81 +95,84 @@ func NewGlobMatcher(pattern []byte) *GlobMatcher {
 
 		case '*':
 			if escd {
-				pat.WriteByte('*')
+				builder.WriteByte('*')
 				escd = false
 
 			} else {
-				pat.WriteByte(asciiGS)
-				numberOfGlobs++
+				builder.WriteRune(asciiGS)
+				numberOfStars++
 			}
 
 		case '?':
 			if escd {
-				pat.WriteByte('?')
+				builder.WriteByte('?')
 				escd = false
 
 			} else {
-				pat.WriteByte(asciiUS)
+				builder.WriteRune(asciiUS)
 			}
 
 		default:
 			if escd {
-				pat.WriteByte('\\')
+				builder.WriteByte('\\')
 			}
 
-			pat.WriteByte(c)
+			builder.WriteRune(c)
 		}
 	}
 
-	pattern = pat.Bytes()
+	pattern = builder.String()
 
 	// The number of states is the lenght of the pattern,
-	// minus the number of globs plus one (the accepting state)
-	numberOfStates := len(pattern) - numberOfGlobs + 1
+	// minus the number of stars plus one (the accepting state)
+	numberOfStates := len(pattern) - numberOfStars + 1
 
 	// Initialise the DFA
-	dfa := make([][]int, 256)
-	for i := range dfa {
-		dfa[i] = make([]int, numberOfStates)
-	}
+	dfa := make([]state, numberOfStates)
 
 	// Now build the DFA
 	fail := -1
 	s := 0
-	for i := range pattern {
-		switch pattern[i] {
+	for _, c := range pattern {
+		switch c {
 		case asciiGS:
-			for c := 0; c < 256; c++ {
-				dfa[c][s] = s
-			}
 			fail = s
 
 		case asciiUS:
-			for c := 0; c < 256; c++ {
-				dfa[c][s] = s + 1
-			}
+			dfa[s].defaultNext = s + 1
 			s++
 
 		default:
-			for c := 0; c < 256; c++ {
-				dfa[c][s] = fail
-			}
-
-			dfa[pattern[i]][s] = s + 1
+			dfa[s].defaultNext = fail
+			dfa[s].match = c
+			dfa[s].specificNext = s + 1
 			s++
 		}
 	}
 
 	// Finally set the accepting state
 	acceptingState := numberOfStates - 1
-	for c := 0; c < 256; c++ {
-		dfa[c][acceptingState] = fail
-	}
+	dfa[acceptingState].defaultNext = fail
 
 	return &GlobMatcher{
-		useBytes:       false,
+		simplePat:      false,
 		pattern:        pattern,
 		dfa:            dfa,
 		acceptingState: acceptingState,
 	}
+}
+
+// state represents a state in a DFA
+type state struct {
+	defaultNext  int
+	match        rune
+	specificNext int
+}
+
+func (s state) getNext(c rune) int {
+	if s.match == c {
+		return s.specificNext
+	}
+
+	return s.defaultNext
 }

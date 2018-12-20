@@ -24,8 +24,6 @@ import (
 
 // List shows all commands for the current platform
 func List(database *bbolt.DB) {
-	// TODO: Sorting of output
-
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
@@ -51,8 +49,6 @@ func List(database *bbolt.DB) {
 
 // ListAll shows all commands for all platforms
 func ListAll(database *bbolt.DB) {
-	// TODO: Sorting of output
-
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
