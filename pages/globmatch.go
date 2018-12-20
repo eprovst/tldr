@@ -63,9 +63,7 @@ func (gm GlobMatcher) Match(text []byte) bool {
 	return false
 }
 
-// NewGlobMatcher uses a KMP style DFA to match strings which may
-// or may not contain globs, this mechod also allows the escaping
-// of glob symbols.
+// NewGlobMatcher builds a DFA capable of matching the provided pattern.
 // NOTE TO SELF: If this is new, maybe I should write about it...
 func NewGlobMatcher(pattern []byte) *GlobMatcher {
 	if !bytes.ContainsAny(pattern, "*?") {
@@ -80,6 +78,7 @@ func NewGlobMatcher(pattern []byte) *GlobMatcher {
 	// Parse the pattern, replacing * by GS, \* by *, ? by US, \? by ? and \\ by \
 	escd := false
 	pat := bytes.NewBuffer([]byte{})
+	numberOfGlobs := 0
 
 	for _, c := range pattern {
 		switch c {
@@ -99,6 +98,7 @@ func NewGlobMatcher(pattern []byte) *GlobMatcher {
 
 			} else {
 				pat.WriteByte(asciiGS)
+				numberOfGlobs++
 			}
 
 		case '?':
@@ -121,47 +121,47 @@ func NewGlobMatcher(pattern []byte) *GlobMatcher {
 
 	pattern = pat.Bytes()
 
+	// The number of states is the lenght of the pattern,
+	// minus the number of globs plus one (the accepting state)
+	numberOfStates := len(pattern) - numberOfGlobs + 1
+
 	// Initialise the DFA
-	// note that Go will write zero's everywhere
 	dfa := make([][]int, 256)
 	for i := range dfa {
-		dfa[i] = make([]int, len(pattern)+1)
+		dfa[i] = make([]int, numberOfStates)
 	}
-
-	// The aceptingState will be the lenght of the pattern
-	acceptingState := len(pattern)
 
 	// Now build the DFA
-	// We use a technique similar to KMP however our initial state points to
-	// the no match state -1 instead of itself.
-	x := 0
-	for c := 0; c < 256; c++ {
-		dfa[c][0] = -1
-	}
-
+	fail := -1
+	s := 0
 	for i := range pattern {
 		switch pattern[i] {
 		case asciiGS:
-			x = i
-			fallthrough
+			for c := 0; c < 256; c++ {
+				dfa[c][s] = s
+			}
+			fail = s
 
 		case asciiUS:
 			for c := 0; c < 256; c++ {
-				dfa[c][i] = i + 1
+				dfa[c][s] = s + 1
 			}
+			s++
 
 		default:
 			for c := 0; c < 256; c++ {
-				dfa[c][i] = dfa[c][x]
+				dfa[c][s] = fail
 			}
 
-			dfa[pattern[i]][i] = i + 1
+			dfa[pattern[i]][s] = s + 1
+			s++
 		}
 	}
 
 	// Finally set the accepting state
+	acceptingState := numberOfStates - 1
 	for c := 0; c < 256; c++ {
-		dfa[c][acceptingState] = dfa[c][x]
+		dfa[c][acceptingState] = fail
 	}
 
 	return &GlobMatcher{
