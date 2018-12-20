@@ -94,7 +94,7 @@ func Update(database *bbolt.DB) {
 
 					// Write the page to the correct bucket
 					if targetBuckets[target] != nil {
-						targetBuckets[target].Put([]byte(command), out)
+						targetBuckets[target].Put([]byte(command), compress(out))
 					}
 				}
 			}

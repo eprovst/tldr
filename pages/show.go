@@ -51,7 +51,7 @@ func Show(database *bbolt.DB, commands []string) {
 					pageUnavailable(command)
 
 				} else {
-					prettyPrint(page)
+					prettyPrint(uncompress(page))
 				}
 			}
 
