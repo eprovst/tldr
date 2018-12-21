@@ -16,11 +16,9 @@
 package pages
 
 import (
+	"fmt"
 	"strings"
 )
-
-// TODO: Work on rune level instead of bytes? Because '?' currently
-// does not support characters longer than one byte.
 
 // We use two special ASCII codes in our pattern building
 const (
@@ -130,29 +128,45 @@ func NewGlobMatcher(pattern string) *GlobMatcher {
 	// Initialise the DFA
 	dfa := make([]state, numberOfStates)
 
+	for s := range dfa {
+		dfa[s].match = make(map[rune]int)
+	}
+
 	// Now build the DFA
-	fail := -1
-	s := 0
+	x, s := -1, 0
 	for _, c := range pattern {
 		switch c {
 		case asciiGS:
-			fail = s
+			x = s
 
 		case asciiUS:
+			if x != -1 {
+				fmt.Println("error: '?' after '*' is not supported at this time")
+			}
+
 			dfa[s].defaultNext = s + 1
 			s++
 
 		default:
-			dfa[s].defaultNext = fail
-			dfa[s].match = c
-			dfa[s].specificNext = s + 1
+			if x == -1 {
+				dfa[s].defaultNext = -1
+
+			} else {
+				for r, n := range dfa[x].match {
+					dfa[s].match[r] = n
+				}
+
+				x = dfa[x].getNext(c)
+			}
+
+			dfa[s].match[c] = s + 1
 			s++
 		}
 	}
 
 	// Finally set the accepting state
 	acceptingState := numberOfStates - 1
-	dfa[acceptingState].defaultNext = fail
+	dfa[acceptingState].defaultNext = x
 
 	return &GlobMatcher{
 		simplePat:      false,
@@ -164,14 +178,13 @@ func NewGlobMatcher(pattern string) *GlobMatcher {
 
 // state represents a state in a DFA
 type state struct {
-	defaultNext  int
-	match        rune
-	specificNext int
+	defaultNext int
+	match       map[rune]int
 }
 
 func (s state) getNext(c rune) int {
-	if s.match == c {
-		return s.specificNext
+	if n, e := s.match[c]; e {
+		return n
 	}
 
 	return s.defaultNext
