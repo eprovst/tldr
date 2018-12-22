@@ -40,7 +40,7 @@ sudo chmod 644 /etc/bash_completion.d/tldr
   tldr -u
   ```
   The database is then stored in the cache directory of your platform.
-- If you want all the commands matching a pattern, let's say `git-*`, use:
+- If you want all the commands matching a grep style regex, let's say `g[ie]t$`, use:
   ```
-  tldr -s "git-*"
+  tldr -s 'g[ie]t$'
   ```

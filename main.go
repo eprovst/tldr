@@ -192,7 +192,7 @@ func main() {
 	cmd.Flags().BoolVar(&purge, "purge", false, "remove database from disk")
 	cmd.Flags().StringVar(&render, "render", "", "render local `page`")
 	cmd.Flags().BoolVarP(&update, "update", "u", false, "redownload pages")
-	cmd.Flags().StringVarP(&search, "search", "s", "", "list pages matching `pattern`")
+	cmd.Flags().StringVarP(&search, "search", "s", "", "list pages matching `regex`")
 
 	// Here for compatibility sake
 	cmd.Flags().BoolVarP(&purge, "clear-cache", "c", false, "purge database")

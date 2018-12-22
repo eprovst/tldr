@@ -17,13 +17,15 @@ package pages
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 
 	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
-// Search shows all pages that contain the pattern
-func Search(database *bbolt.DB, pattern string) {
+// Search shows all pages that matches the regex
+func Search(database *bbolt.DB, regex string) {
 	// Iterate through keys, printing all that match the pattern,
 	// as keys are byte ordered, they are also in alphabethic order.
 	err := database.View(
@@ -36,8 +38,13 @@ func Search(database *bbolt.DB, pattern string) {
 				return nil
 			}
 
-			// Create a matcher from the pattern
-			matcher := NewGlobMatcher(pattern)
+			// Create a matcher from the regex
+			matcher, err := regexp.CompilePOSIX(regex)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 
 			// Search in both the local and the common bucket
 			searchInBucket(root.Bucket([]byte(targets.OsDir)), matcher)
@@ -50,13 +57,12 @@ func Search(database *bbolt.DB, pattern string) {
 	}
 }
 
-func searchInBucket(bucket *bbolt.Bucket, matcher *GlobMatcher) error {
+func searchInBucket(bucket *bbolt.Bucket, matcher *regexp.Regexp) error {
 	// Print all the pages that match the pattern
 	return bucket.ForEach(
 		func(page, _ []byte) error {
-			pageS := string(page)
-			if matcher.Match(pageS) {
-				fmt.Println(pageS)
+			if matcher.Match(page) {
+				fmt.Println(string(page))
 			}
 
 			return nil
