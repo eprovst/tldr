@@ -16,6 +16,8 @@
 package pages
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"os"
 
@@ -35,11 +37,27 @@ func List(database *bbolt.DB) {
 				return nil
 			}
 
+			// Get the local en common pages
+			common := root.Bucket(commonBucket)
+
+			// If we do not have a local set
+			if targets.OsDir == "common" {
+				// Print only common pages
+				return common.ForEach(printPageName)
+			}
+
+			local := root.Bucket([]byte(targets.OsDir))
+
+			// If the platform is not supported print an error
+			if local == nil {
+				return errors.New("unsupported platform '" + targets.OsDir + "'")
+			}
+
 			// Print all the common pages
-			root.Bucket(commonBucket).ForEach(printPageName)
+			common.ForEach(printPageName)
 
 			// Print all the platform specific pages
-			return root.Bucket([]byte(targets.OsDir)).ForEach(printPageName)
+			return local.ForEach(printPageName)
 		})
 
 	// Has something gone wrong?
@@ -47,6 +65,11 @@ func List(database *bbolt.DB) {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
+}
+
+func printPageName(name, _ []byte) error {
+	fmt.Println(string(name))
+	return nil
 }
 
 // ListAll shows all commands for all platforms
@@ -61,13 +84,8 @@ func ListAll(database *bbolt.DB) {
 				return nil
 			}
 
-			// Print all the common pages
-			root.Bucket(commonBucket).ForEach(printPageName)
-
-			// Print all the platform specific pages
-			for target := range targets.AllTargets {
-				root.Bucket([]byte(target)).ForEach(printPageName)
-			}
+			// Print all the pages
+			printPages(root)
 
 			return nil
 		})
@@ -79,7 +97,45 @@ func ListAll(database *bbolt.DB) {
 	}
 }
 
-func printPageName(page, _ []byte) error {
-	fmt.Println(string(page))
-	return nil
+func printPages(bucket *bbolt.Bucket) error {
+	return bucket.ForEach(
+		func(page, contents []byte) error {
+			if contents != nil {
+				fmt.Println(string(page))
+
+			} else {
+				printPages(bucket.Bucket(page))
+			}
+			return nil
+		})
+}
+
+// ListPlatforms shows all available platforms
+func ListPlatforms(database *bbolt.DB) {
+	err := database.View(
+		func(tx *bbolt.Tx) error {
+			// Open the pages bucket
+			root := tx.Bucket(rootBucket)
+
+			if root == nil {
+				emptyDatabase()
+				return nil
+			}
+
+			// Print all the platforms, which are buckets in the root
+			return root.ForEach(
+				func(name []byte, value []byte) error {
+					if value == nil && !bytes.Equal(name, commonBucket) {
+						fmt.Println(string(name))
+					}
+
+					return nil
+				})
+		})
+
+	// Has something gone wrong?
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
 }

@@ -16,6 +16,7 @@
 package pages
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -45,9 +46,25 @@ func Search(database *bbolt.DB, regex string) {
 				return err
 			}
 
+			// Get the local en common pages
+			common := root.Bucket(commonBucket)
+
+			// If we do not have a local set
+			if targets.OsDir == "common" {
+				// Search only in common pages
+				return searchInBucket(common, matcher)
+			}
+
+			local := root.Bucket([]byte(targets.OsDir))
+
+			// If the platform is not supported print an error
+			if local == nil {
+				return errors.New("unsupported platform '" + targets.OsDir + "'")
+			}
+
 			// Search in both the local and the common bucket
-			searchInBucket(root.Bucket([]byte(targets.OsDir)), matcher)
-			return searchInBucket(root.Bucket(commonBucket), matcher)
+			searchInBucket(local, matcher)
+			return searchInBucket(common, matcher)
 		})
 
 	// Has something gone wrong?

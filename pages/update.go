@@ -26,7 +26,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/elecprog/tldr/targets"
 	"github.com/golang/snappy"
 	"go.etcd.io/bbolt"
 )
@@ -45,14 +44,9 @@ func Update(database *bbolt.DB) {
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
 			// Remove the root bucket
-			return tx.DeleteBucket(rootBucket)
+			tx.DeleteBucket(rootBucket)
+			return nil
 		})
-
-	// Has something gone wrong?
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
 
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
@@ -64,20 +58,18 @@ func Update(database *bbolt.DB) {
 				return errors.New("failed to remove old database")
 			}
 
-			// Add buckets for all supported platforms and for common pages
+			// Add bucket for the common pages
 			targetBuckets := make(map[string]*bbolt.Bucket)
 			targetBuckets["common"], _ = root.CreateBucket(commonBucket)
 
-			for target := range targets.AllTargets {
-				targetBuckets[target], _ = root.CreateBucket([]byte(target))
-			}
-
 			// Read in all pages
 			for _, file := range zipReader.File {
-				// Only add english pages
-				if strings.HasPrefix(file.Name, "pages/") {
-					target := strings.TrimPrefix(path.Dir(file.Name), "pages/")
-					command := strings.TrimSuffix(path.Base(file.Name), ".md")
+				command := strings.TrimSuffix(path.Base(file.Name), ".md")
+				dir := path.Dir(file.Name)
+
+				// Only add english pages, for now
+				if strings.HasPrefix(dir, "pages/") {
+					target := strings.TrimPrefix(dir, "pages/")
 
 					// Read the page
 					contents, err := file.Open()
@@ -95,10 +87,16 @@ func Update(database *bbolt.DB) {
 						continue
 					}
 
-					// Compress the page and write it to the correct bucket
-					if targetBuckets[target] != nil {
-						targetBuckets[target].Put([]byte(command), snappy.Encode(nil, out))
+					// Do we have to create a new bucket?
+					tgtBucket, ok := targetBuckets[target]
+
+					if !ok {
+						tgtBucket, _ = root.CreateBucket([]byte(target))
+						targetBuckets[target] = tgtBucket
 					}
+
+					// Compress the page and write it to the bucket
+					tgtBucket.Put([]byte(command), snappy.Encode(nil, out))
 				}
 			}
 

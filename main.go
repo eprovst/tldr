@@ -44,7 +44,7 @@ var (
 
 var cmd = &cobra.Command{
 	Use:     "tldr [flags] command [command ...]",
-	Version: "v0.3.0",
+	Version: "v0.3.1",
 	Short:   "Go command line client for tldr",
 
 	DisableFlagsInUseLine: true,
@@ -139,13 +139,12 @@ var cmd = &cobra.Command{
 
 		// Overide the operating system
 		if cmd.Flag("platform").Changed {
-			if targets.AllTargets[platform] {
-				targets.OsDir = platform
-
-			} else {
-				fmt.Fprintln(os.Stderr, "error: unsupported platform", platform)
+			if platform == "common" {
+				fmt.Fprintln(os.Stderr, "error: common is not a platform")
 				os.Exit(1)
 			}
+
+			targets.OsDir = platform
 		}
 
 		// Update the database if needed
@@ -168,9 +167,8 @@ var cmd = &cobra.Command{
 
 		// List platforms
 		if listPlatforms {
-			for target := range targets.AllTargets {
-				fmt.Println(target)
-			}
+			pages.ListPlatforms(db)
+			return
 		}
 
 		// Search?
