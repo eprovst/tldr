@@ -16,7 +16,9 @@
 package pages
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/elecprog/tldr/targets"
 	"github.com/golang/snappy"
@@ -40,6 +42,11 @@ func Show(database *bbolt.DB, commands []string) {
 			common := root.Bucket(commonBucket)
 			local := root.Bucket([]byte(targets.OsDir))
 
+			// If the locale is not supported print an error
+			if local == nil {
+				return errors.New("unsupported platform '" + targets.OsDir + "'")
+			}
+
 			// Print all the given commands
 			for _, command := range commands {
 				page := local.Get([]byte(command))
@@ -55,7 +62,8 @@ func Show(database *bbolt.DB, commands []string) {
 					out, err := snappy.Decode(nil, page)
 
 					if err != nil {
-						fmt.Println("error: on processing '"+command+"',", err)
+						fmt.Fprintln(os.Stderr, "warning: uncompressing '"+command+"' failed,", err)
+						continue
 					}
 
 					prettyPrint(out)
@@ -67,6 +75,7 @@ func Show(database *bbolt.DB, commands []string) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 }

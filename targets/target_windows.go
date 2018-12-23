@@ -37,8 +37,8 @@ func init() {
 	stdOutHandle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
 
 	if err != nil {
-		fmt.Println("Failed to get a handle for standard input, please open an issue, this should work...")
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, "Failed to get a handle for standard input, please open an issue, this should work...")
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
@@ -47,8 +47,8 @@ func init() {
 	err = windows.GetConsoleMode(stdOutHandle, &consoleMode)
 
 	if err != nil {
-		fmt.Println("Failed to get current terminal mode, please open an issue, this should work...")
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, "Failed to get current terminal mode, please open an issue, this should work...")
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
@@ -57,8 +57,8 @@ func init() {
 	err = windows.SetConsoleMode(stdOutHandle, consoleMode)
 
 	if err != nil {
-		fmt.Println("Failed to enable ASCII escape sequences, please open an issue, this should work...")
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, "Failed to enable ASCII escape sequences, please open an issue, this should work...")
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

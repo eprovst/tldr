@@ -57,7 +57,7 @@ complete -o default -F _tldr_completion tldr`
 func GetDatabasePath() string {
 	dir, err := os.UserCacheDir()
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 

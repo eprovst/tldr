@@ -102,7 +102,7 @@ var cmd = &cobra.Command{
 			err := os.MkdirAll(filepath.Dir(dbPath), 0777)
 
 			if err != nil {
-				fmt.Println("error: ", err)
+				fmt.Fprintln(os.Stderr, "error: ", err)
 				os.Exit(1)
 			}
 
@@ -115,7 +115,7 @@ var cmd = &cobra.Command{
 			err := os.Remove(dbPath)
 
 			if err != nil {
-				fmt.Println("error:", err)
+				fmt.Fprintln(os.Stderr, "error: ", err)
 				os.Exit(1)
 			}
 
@@ -131,7 +131,7 @@ var cmd = &cobra.Command{
 			})
 
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Fprintln(os.Stderr, "error: ", err)
 			os.Exit(1)
 		}
 
@@ -143,7 +143,7 @@ var cmd = &cobra.Command{
 				targets.OsDir = platform
 
 			} else {
-				fmt.Println("error: unsupported platform", platform)
+				fmt.Fprintln(os.Stderr, "error: unsupported platform", platform)
 				os.Exit(1)
 			}
 		}

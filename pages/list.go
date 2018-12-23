@@ -17,6 +17,7 @@ package pages
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
@@ -43,7 +44,8 @@ func List(database *bbolt.DB) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 }
 
@@ -72,7 +74,8 @@ func ListAll(database *bbolt.DB) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 }
 

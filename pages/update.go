@@ -37,7 +37,7 @@ func Update(database *bbolt.DB) {
 	zipReader, err := downloadZip(pagesSource)
 
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 
@@ -45,14 +45,13 @@ func Update(database *bbolt.DB) {
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
 			// Remove the root bucket
-			tx.DeleteBucket(rootBucket)
-
-			return nil
+			return tx.DeleteBucket(rootBucket)
 		})
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 
 	// Now add the files relevant to this platform to the database
@@ -109,7 +108,8 @@ func Update(database *bbolt.DB) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 }
 

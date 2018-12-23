@@ -26,14 +26,14 @@ func Render(path string) {
 	file, err := os.Open(path)
 
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 
 	page, err := ioutil.ReadAll(file)
 
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 

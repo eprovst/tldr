@@ -42,8 +42,7 @@ func Search(database *bbolt.DB, regex string) {
 			matcher, err := regexp.CompilePOSIX(regex)
 
 			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+				return err
 			}
 
 			// Search in both the local and the common bucket
@@ -53,7 +52,7 @@ func Search(database *bbolt.DB, regex string) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Println("warning:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 	}
 }
 
