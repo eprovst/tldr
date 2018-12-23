@@ -44,18 +44,13 @@ func Show(database *bbolt.DB, commands []string) {
 
 			// If the platform is not supported print an error
 			// but only if it is because of a misconfiguration
-			if local == nil && targets.OsDir != "common" {
+			if local == nil {
 				return errors.New("unsupported platform '" + targets.OsDir + "'")
 			}
 
 			// Print all the given commands
 			for _, command := range commands {
-				var page []byte
-
-				// If we have a local bucket search in there
-				if local != nil {
-					page = local.Get([]byte(command))
-				}
+				page := local.Get([]byte(command))
 
 				if page == nil {
 					page = common.Get([]byte(command))

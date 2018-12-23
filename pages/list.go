@@ -39,13 +39,6 @@ func List(database *bbolt.DB) {
 
 			// Get the local en common pages
 			common := root.Bucket(commonBucket)
-
-			// If we do not have a local set
-			if targets.OsDir == "common" {
-				// Print only common pages
-				return common.ForEach(printPageName)
-			}
-
 			local := root.Bucket([]byte(targets.OsDir))
 
 			// If the platform is not supported print an error

@@ -48,13 +48,6 @@ func Search(database *bbolt.DB, regex string) {
 
 			// Get the local en common pages
 			common := root.Bucket(commonBucket)
-
-			// If we do not have a local set
-			if targets.OsDir == "common" {
-				// Search only in common pages
-				return searchInBucket(common, matcher)
-			}
-
 			local := root.Bucket([]byte(targets.OsDir))
 
 			// If the platform is not supported print an error

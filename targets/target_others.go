@@ -24,4 +24,4 @@ const OsName = runtime.GOOS
 
 // OsDir is the directory in the tldr pages containing
 // the pages for this platform
-var OsDir = "common"
+var OsDir = runtime.GOOS
