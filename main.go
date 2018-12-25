@@ -122,12 +122,19 @@ var cmd = &cobra.Command{
 			return
 		}
 
-		// Open or create the database, with a timeout of 1 second
-		// and read only if we do not have to update it.
+		// We open/create the databse with a timeout of one second
+		// to not keep on attempting if there is something wrong.
+		// The database is opened as read only if we do not have
+		// to update it.
+		// A pages size of 128 seems to result in the smallest
+		// database size for our purposes, setting it so low
+		// would result in a major slowdown in large databases
+		// but ours is small.
 		db, err := bbolt.Open(dbPath, 0600,
 			&bbolt.Options{
 				Timeout:  1 * time.Second,
 				ReadOnly: !update,
+				PageSize: 128,
 			})
 
 		if err != nil {

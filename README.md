@@ -35,7 +35,7 @@ sudo chmod 644 /etc/bash_completion.d/tldr
   ```
   tldr command1 [command2 ...]
   ```
-- This client downloads all tldr pages on the first run (resulting in a database of about 1&nbsp;MB) which should only take a couple of seconds. To redownload the pages and rebuild the database you can use:
+- This client downloads all tldr pages on the first run (resulting in a database of about 500&nbsp;KB) which should only take a couple of seconds. To redownload the pages and rebuild the database you can use:
   ```
   tldr -u
   ```

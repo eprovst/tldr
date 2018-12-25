@@ -40,13 +40,19 @@ func Update(database *bbolt.DB) {
 		os.Exit(1)
 	}
 
-	// Purge the old database
+	// Remove all buckets from the old database
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
-			// Remove the root bucket
-			tx.DeleteBucket(rootBucket)
-			return nil
+			return tx.ForEach(func(bucketName []byte, _ *bbolt.Bucket) error {
+				return tx.DeleteBucket(bucketName)
+			})
 		})
+
+	// Did something go wrong?
+	if err != nil {
+		fmt.Fprintln(os.Stdout, "error:", err)
+		os.Exit(1)
+	}
 
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
