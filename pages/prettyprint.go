@@ -20,29 +20,27 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/logrusorgru/aurora"
 )
 
 const (
-	normal      = aurora.Color(0)
-	heading     = aurora.BoldFm
+	normal      = colDefault
+	heading     = normal | modBold
 	note        = normal
-	description = aurora.GreenFg | aurora.BoldFm
-	verbatim    = aurora.BoldFm | aurora.RedFg
-	example     = normal
+	description = normal
+	verbatim    = colBrightRed
+	example     = normal | modItalic
 )
 
 func emptyDatabase() {
 	// The database is empty
 	fmt.Fprint(os.Stderr, "\n  ", "The database is empty.")
-	fmt.Fprint(os.Stderr, "\n  ", "You can try updating the database using ", aurora.Colorize("tldr --update", verbatim), ".\n\n")
+	fmt.Fprint(os.Stderr, "\n  ", "You can try updating the database using ", colorize("tldr --update", verbatim), ".\n\n")
 }
 
 func pageUnavailable(command string) {
 	// The page is not in the database
-	fmt.Print("\n  ", aurora.Colorize(command, heading), " documentation is not available.")
-	fmt.Print("\n  ", "You can try updating the database using ", aurora.Colorize("tldr --update", verbatim), ".")
+	fmt.Print("\n  ", colorize(command, heading), " documentation is not available.")
+	fmt.Print("\n  ", "You can try updating the database using ", colorize("tldr --update", verbatim), ".")
 	fmt.Print("\n  ", "Or add a page yourself to https://github.com/tldr-pages/tldr.", "\n\n")
 }
 
@@ -82,7 +80,7 @@ func prettyPrint(page []byte) {
 	fmt.Println()
 }
 
-func processLine(line string, defaultStyle aurora.Color) {
+func processLine(line string, defaultStyle color) {
 	// Remove unneeded spaces
 	line = strings.TrimSpace(line)
 
@@ -103,7 +101,7 @@ func processLine(line string, defaultStyle aurora.Color) {
 
 		} else {
 			// Normal text
-			fmt.Print(aurora.Colorize(part, defaultStyle))
+			fmt.Print(colorize(part, defaultStyle))
 		}
 
 		inVerbatim = !inVerbatim
@@ -128,11 +126,11 @@ func processVerbatim(line string) {
 		for _, part := range strings.Split(segment, "}}") {
 			if inExample {
 				// Optional
-				fmt.Print(aurora.Colorize(part, example))
+				fmt.Print(colorize(part, example))
 
 			} else {
 				// Verbatim
-				fmt.Print(aurora.Colorize(part, verbatim))
+				fmt.Print(colorize(part, verbatim))
 			}
 
 			inExample = !inExample
