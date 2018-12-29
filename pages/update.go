@@ -26,7 +26,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/golang/snappy"
 	"go.etcd.io/bbolt"
 )
 
@@ -102,7 +101,7 @@ func Update(database *bbolt.DB) {
 					}
 
 					// Compress the page and write it to the bucket
-					tgtBucket.Put([]byte(command), snappy.Encode(nil, out))
+					tgtBucket.Put([]byte(command), out)
 				}
 			}
 

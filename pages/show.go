@@ -21,7 +21,6 @@ import (
 	"os"
 
 	"github.com/elecprog/tldr/targets"
-	"github.com/golang/snappy"
 	"go.etcd.io/bbolt"
 )
 
@@ -60,14 +59,7 @@ func Show(database *bbolt.DB, commands []string) {
 					pageUnavailable(command)
 
 				} else {
-					out, err := snappy.Decode(nil, page)
-
-					if err != nil {
-						fmt.Fprintln(os.Stderr, "warning: uncompressing '"+command+"' failed,", err)
-						continue
-					}
-
-					prettyPrint(out)
+					prettyPrint(page)
 				}
 			}
 
