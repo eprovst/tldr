@@ -16,15 +16,59 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
+
+// TODO: Once Go 1.11 is more commonly available remove this in favour of
+// os.UserCacheDir(), ie. when Ubuntu 19.04 is released.
+// From Go standard library: os/file.go#L346
+func userCacheDir() (string, error) {
+	var dir string
+
+	switch runtime.GOOS {
+	case "windows":
+		dir = os.Getenv("LocalAppData")
+
+		if dir == "" {
+			return "", errors.New("%LocalAppData% is not defined")
+		}
+
+	case "darwin":
+		dir = os.Getenv("HOME")
+		if dir == "" {
+			return "", errors.New("$HOME is not defined")
+		}
+		dir += "/Library/Caches"
+
+	case "plan9":
+		dir = os.Getenv("home")
+		if dir == "" {
+			return "", errors.New("$home is not defined")
+		}
+		dir += "/lib/cache"
+
+	default: // Unix
+		dir = os.Getenv("XDG_CACHE_HOME")
+		if dir == "" {
+			dir = os.Getenv("HOME")
+			if dir == "" {
+				return "", errors.New("neither $XDG_CACHE_HOME nor $HOME are defined")
+			}
+			dir += "/.cache"
+		}
+	}
+
+	return dir, nil
+}
 
 // getDatabasePath returns the path to the database or panics if the system
 // does not have a cache directory.
 func getDatabasePath() string {
-	dir, err := os.UserCacheDir()
+	dir, err := userCacheDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
