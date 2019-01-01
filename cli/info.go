@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,25 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/elecprog/tldr/targets"
+	flag "github.com/spf13/pflag"
 )
+
+// Version info
+const thisVersion = "v0.3.1"
+
+func showHelp() {
+	fmt.Fprintln(os.Stderr, "Go command line client for tldr")
+	fmt.Fprintln(os.Stderr, "\nUsage:")
+	fmt.Fprintln(os.Stderr, "  tldr [flags] command [commands...]")
+	fmt.Fprintln(os.Stderr, "\nFlags:")
+	flag.PrintDefaults()
+}
+
+func showVersion() {
+	fmt.Println("tldr", thisVersion, "on", targets.OsName)
+}
 
 // TODO: Once Go 1.11 is more commonly available remove this in favour of
 // os.UserCacheDir(), ie. when Ubuntu 19.04 is released.
@@ -82,24 +100,3 @@ func pathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }
-
-// bashCompletion is a bashcompletion script for tldr
-const bashCompletion = `#!/bin/bash
-_tldr_completion()
-{
-	if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-"* ]]; then
-		if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-p" || "${COMP_WORDS[$COMP_CWORD - 1]}" == "--platform" ]]; then
-			COMPREPLY=($(compgen -W "$(tldr --list-platforms)" -- ${COMP_WORDS[$COMP_CWORD]}))
-		else
-			COMPREPLY=()
-		fi
-	else
-		if [[ "${COMP_WORDS[$COMP_CWORD]}" == "-"* ]]; then
-			COMPREPLY=($(compgen -W "--help --platform --purge --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
-		else
-			COMPREPLY=($(tldr --search "^${COMP_WORDS[$COMP_CWORD]}" 2> /dev/null))
-		fi
-	fi
-}
-
-complete -o default -F _tldr_completion tldr`

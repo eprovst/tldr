@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ func Search(database *bbolt.DB, regex string) {
 
 	// Has something gone wrong?
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
 

@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,30 +18,30 @@ package cli
 import (
 	"errors"
 
-	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 )
 
 // validateArguments validates if the combination of flags and arguments is valid
-func validateArguments(cmd *cobra.Command, args []string) error {
+func validateArguments() error {
 	// If we don't have to do anything special, we need at least one command
-	if cmd.Flags().NFlag() == 0 && len(args) == 0 {
+	if flag.NFlag() == 0 && len(flag.Args()) == 0 {
 		return errors.New("missing argument: command")
 	}
 
 	// See if we have too many flags
-	numFlags := cmd.Flags().NFlag()
+	numFlags := flag.NFlag()
 
 	// Update and platform don't realy count
-	if update {
+	if *update {
 		numFlags--
 	}
 
-	if cmd.Flag("platform").Changed {
+	if *platform != "" {
 		numFlags--
 	}
 
 	// We can't have arguments and flags
-	if numFlags > 0 && len(args) > 0 {
+	if numFlags > 0 && len(flag.Args()) > 0 {
 		return errors.New("too many arguments: expected none")
 	}
 
