@@ -23,20 +23,21 @@ import (
 
 // validateArguments validates if the combination of flags and arguments is valid
 func validateArguments() error {
-	// If we don't have to do anything special, we need at least one command
-	if flag.NFlag() == 0 && len(flag.Args()) == 0 {
-		return errors.New("missing argument: command")
-	}
-
 	// See if we have too many flags
 	numFlags := flag.NFlag()
 
-	// Update and platform don't realy count
-	if *update {
+	// The platform flag never counts
+	if *platform != "" {
 		numFlags--
 	}
 
-	if *platform != "" {
+	// If we don't have to do anything special, we need at least one command
+	if numFlags == 0 && len(flag.Args()) == 0 {
+		return errors.New("missing argument: command")
+	}
+
+	// The update flag generally doesn't count
+	if *update {
 		numFlags--
 	}
 
