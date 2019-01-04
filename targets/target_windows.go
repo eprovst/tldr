@@ -33,18 +33,9 @@ var OsDir = "windows"
 // however we can change this using this.
 // Why is this not the default? No idea...
 func init() {
-	// Get a handle to the console
-	stdOutHandle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to get a handle for standard input, please open an issue, this should work...")
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
 	// Get the current console settings
 	var consoleMode uint32 = 0
-	err = windows.GetConsoleMode(stdOutHandle, &consoleMode)
+	err := windows.GetConsoleMode(windows.Stdout, &consoleMode)
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to get current terminal mode, please open an issue, this should work...")
@@ -54,7 +45,7 @@ func init() {
 
 	// Add support for escape codes to those settings
 	consoleMode |= windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING
-	err = windows.SetConsoleMode(stdOutHandle, consoleMode)
+	err = windows.SetConsoleMode(windows.Stdout, consoleMode)
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to enable ASCII escape sequences, please open an issue, this should work...")
