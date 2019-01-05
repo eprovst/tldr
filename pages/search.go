@@ -16,12 +16,10 @@
 package pages
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
 
-	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
@@ -31,10 +29,16 @@ func Search(database *bbolt.DB, regex string) {
 	// as keys are byte ordered, they are also in alphabethic order.
 	err := database.View(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket
-			root := tx.Bucket(rootBucket)
+			// Open the pages buckets, only english concerns us here
+			// as other languages will only contain translations
+			englishCommon, englishPlatform, _, _, err := getBuckets(tx)
 
-			if root == nil {
+			if err != nil {
+				return err
+			}
+
+			// This one should exist
+			if englishCommon == nil {
 				emptyDatabase()
 				return nil
 			}
@@ -46,18 +50,10 @@ func Search(database *bbolt.DB, regex string) {
 				return err
 			}
 
-			// Get the local en common pages
-			common := root.Bucket(commonBucket)
-			local := root.Bucket([]byte(targets.OsDir))
-
-			// If the platform is not supported print an error
-			if local == nil {
-				return errors.New("unsupported platform '" + targets.OsDir + "'")
-			}
-
-			// Search in both the local and the common bucket
-			searchInBucket(local, matcher)
-			return searchInBucket(common, matcher)
+			// TODO strip doubles
+			// Search in all relevant buckets
+			searchInBucket(englishPlatform, matcher)
+			return searchInBucket(englishCommon, matcher)
 		})
 
 	// Has something gone wrong?
@@ -67,6 +63,11 @@ func Search(database *bbolt.DB, regex string) {
 }
 
 func searchInBucket(bucket *bbolt.Bucket, matcher *regexp.Regexp) error {
+	// Handle nil buckets
+	if bucket == nil {
+		return nil
+	}
+
 	// Print all the pages that match the pattern
 	return bucket.ForEach(
 		func(page, _ []byte) error {

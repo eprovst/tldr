@@ -119,12 +119,12 @@ func Run() {
 
 	// Overide the operating system
 	if *platform != "" {
-		if *platform == "common" {
-			fmt.Fprintln(os.Stderr, "error: common is not a platform")
-			os.Exit(1)
-		}
-
 		targets.OsDir = *platform
+	}
+
+	// Overide the language
+	if *language != "" {
+		targets.CurrentLanguage = *language
 	}
 
 	// Update the database if needed
@@ -148,6 +148,12 @@ func Run() {
 	// List platforms
 	if *listPlatforms {
 		pages.ListPlatforms(db)
+		return
+	}
+
+	// List languages
+	if *listLanguages {
+		pages.ListLanguages(db)
 		return
 	}
 

@@ -24,6 +24,7 @@ var (
 	update   = flag.BoolP("update", "u", false, "redownload pages")
 	help     = flag.BoolP("help", "h", false, "help for tldr")
 	platform = flag.StringP("platform", "p", "", "overide default platform")
+	language = flag.StringP("language", "l", "", "overide default language")
 	search   = flag.StringP("search", "s", "", "list pages matching `regex`")
 	purge    = flag.Bool("purge", false, "remove database from disk")
 	render   = flag.String("render", "", "render local `page`")
@@ -34,6 +35,7 @@ var (
 	list                = flag.Bool("list", false, "list all pages for the current platform")
 	listAll             = flag.Bool("list-all", false, "list all available pages")
 	listPlatforms       = flag.Bool("list-platforms", false, "list all supported platforms")
+	listLanguages       = flag.Bool("list-languages", false, "list all supported languages")
 )
 
 func init() {
@@ -42,6 +44,7 @@ func init() {
 	flag.CommandLine.MarkHidden("list")
 	flag.CommandLine.MarkHidden("list-all")
 	flag.CommandLine.MarkHidden("list-platforms")
+	flag.CommandLine.MarkHidden("list-languages")
 
 	// Here for compatibility sake
 	flag.BoolVarP(purge, "clear-cache", "c", false, "purge database")

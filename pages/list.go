@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,11 +17,9 @@ package pages
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
@@ -29,28 +27,24 @@ import (
 func List(database *bbolt.DB) {
 	err := database.View(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket
-			root := tx.Bucket(rootBucket)
+			// Open the pages buckets, only english concerns us here
+			// as other languages will only contain translations
+			englishCommon, englishPlatform, _, _, err := getBuckets(tx)
 
-			if root == nil {
+			if err != nil {
+				return err
+			}
+
+			// This one should exist
+			if englishCommon == nil {
 				emptyDatabase()
 				return nil
 			}
 
-			// Get the local en common pages
-			common := root.Bucket(commonBucket)
-			local := root.Bucket([]byte(targets.OsDir))
-
-			// If the platform is not supported print an error
-			if local == nil {
-				return errors.New("unsupported platform '" + targets.OsDir + "'")
-			}
-
-			// Print all the common pages
-			common.ForEach(printPageName)
-
-			// Print all the platform specific pages
-			return local.ForEach(printPageName)
+			// TODO strip doubles
+			// Print all the pages
+			printPageNames(englishPlatform)
+			return printPageNames(englishCommon)
 		})
 
 	// Has something gone wrong?
@@ -60,9 +54,18 @@ func List(database *bbolt.DB) {
 	}
 }
 
-func printPageName(name, _ []byte) error {
-	fmt.Println(string(name))
-	return nil
+func printPageNames(bucket *bbolt.Bucket) error {
+	// Does the bucket exist?
+	if bucket == nil {
+		return nil
+	}
+
+	// Print all the names of the pages in the bucket
+	return bucket.ForEach(
+		func(name, _ []byte) error {
+			fmt.Println(string(name))
+			return nil
+		})
 }
 
 // ListAll shows all commands for all platforms
@@ -70,7 +73,7 @@ func ListAll(database *bbolt.DB) {
 	err := database.View(
 		func(tx *bbolt.Tx) error {
 			// Open the pages bucket
-			root := tx.Bucket(rootBucket)
+			root := tx.Bucket(defaultBucket)
 
 			if root == nil {
 				emptyDatabase()
@@ -78,6 +81,7 @@ func ListAll(database *bbolt.DB) {
 			}
 
 			// Print all the pages
+			// TODO remove doubles
 			printPages(root)
 
 			return nil
@@ -107,8 +111,8 @@ func printPages(bucket *bbolt.Bucket) error {
 func ListPlatforms(database *bbolt.DB) {
 	err := database.View(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket
-			root := tx.Bucket(rootBucket)
+			// Open the pages bucket, we assume that all pages appear in EN
+			root := tx.Bucket(defaultBucket)
 
 			if root == nil {
 				emptyDatabase()
@@ -119,6 +123,34 @@ func ListPlatforms(database *bbolt.DB) {
 			return root.ForEach(
 				func(name []byte, value []byte) error {
 					if value == nil && !bytes.Equal(name, commonBucket) {
+						fmt.Println(string(name))
+					}
+
+					return nil
+				})
+		})
+
+	// Has something gone wrong?
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
+
+// ListLanguages shows all available platforms
+func ListLanguages(database *bbolt.DB) {
+	err := database.View(
+		func(tx *bbolt.Tx) error {
+			// Not even the default bucket -> empty database
+			if tx.Bucket(defaultBucket) == nil {
+				emptyDatabase()
+				return nil
+			}
+
+			// Print all the languages, which are buckets in the default
+			return tx.ForEach(
+				func(name []byte, _ *bbolt.Bucket) error {
+					if !bytes.Equal(name, defaultBucket) {
 						fmt.Println(string(name))
 					}
 

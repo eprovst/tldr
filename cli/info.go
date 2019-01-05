@@ -27,7 +27,7 @@ import (
 )
 
 // Version info
-const thisVersion = "v0.3.1"
+const thisVersion = "v0.4.0"
 
 func showHelp() {
 	fmt.Fprintln(os.Stderr, "Go command line client for tldr")

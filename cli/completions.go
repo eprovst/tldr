@@ -22,12 +22,14 @@ _tldr_completion()
 	if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-"* ]]; then
 		if [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-p" || "${COMP_WORDS[$COMP_CWORD - 1]}" == "--platform" ]]; then
 			COMPREPLY=($(compgen -W "$(tldr --list-platforms)" -- ${COMP_WORDS[$COMP_CWORD]}))
+		elif [[ "${COMP_WORDS[$COMP_CWORD - 1]}" == "-l" || "${COMP_WORDS[$COMP_CWORD - 1]}" == "--language" ]]; then
+			COMPREPLY=($(compgen -W "$(tldr --list-languages)" -- ${COMP_WORDS[$COMP_CWORD]}))
 		else
 			COMPREPLY=()
 		fi
 	else
 		if [[ "${COMP_WORDS[$COMP_CWORD]}" == "-"* ]]; then
-			COMPREPLY=($(compgen -W "--help --platform --purge --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
+			COMPREPLY=($(compgen -W "--help --language --platform --purge --render --search --update --version" -- ${COMP_WORDS[$COMP_CWORD]}))
 		else
 			COMPREPLY=($(tldr --search "^${COMP_WORDS[$COMP_CWORD]}" 2> /dev/null))
 		fi

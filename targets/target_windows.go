@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +28,10 @@ const OsName = "Windows"
 // OsDir is the directory in the tldr pages containing
 // the pages for this platform
 var OsDir = "windows"
+
+// CurrentLanguage is the current users language
+// TODO: Detect language on Windows
+var CurrentLanguage = "en"
 
 // Windows by default ignores ASCII escape codes,
 // however we can change this using this.

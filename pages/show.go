@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +16,9 @@
 package pages
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/elecprog/tldr/targets"
 	"go.etcd.io/bbolt"
 )
 
@@ -29,30 +27,37 @@ func Show(database *bbolt.DB, commands []string) {
 	// Get the page
 	err := database.View(
 		func(tx *bbolt.Tx) error {
-			// Open the pages bucket
-			root := tx.Bucket(rootBucket)
+			// Open the pages buckets
+			englishCommon, englishPlatform, langCommon, langPlatform, err := getBuckets(tx)
 
-			if root == nil {
+			if err != nil {
+				return err
+			}
+
+			// This one should exist
+			if englishCommon == nil {
 				emptyDatabase()
 				return nil
 			}
 
-			// Get the local en common pages
-			common := root.Bucket(commonBucket)
-			local := root.Bucket([]byte(targets.OsDir))
-
-			// If the platform is not supported print an error
-			// but only if it is because of a misconfiguration
-			if local == nil {
-				return errors.New("unsupported platform '" + targets.OsDir + "'")
-			}
-
 			// Print all the given commands
 			for _, command := range commands {
-				page := local.Get([]byte(command))
+				var page []byte
+
+				if langPlatform != nil {
+					page = langPlatform.Get([]byte(command))
+				}
+
+				if page == nil && langCommon != nil {
+					page = langCommon.Get([]byte(command))
+				}
+
+				if page == nil && englishPlatform != nil {
+					page = englishPlatform.Get([]byte(command))
+				}
 
 				if page == nil {
-					page = common.Get([]byte(command))
+					page = englishCommon.Get([]byte(command))
 				}
 
 				if page == nil {

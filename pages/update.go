@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,53 +56,90 @@ func Update(database *bbolt.DB) {
 	// Now add the files relevant to this platform to the database
 	err = database.Update(
 		func(tx *bbolt.Tx) error {
-			// Create a new pages bucket
-			root, _ := tx.CreateBucket(rootBucket)
+			// Create a new default pages bucket
+			deflt, _ := tx.CreateBucket(defaultBucket)
 
-			if root == nil {
+			if deflt == nil {
 				return errors.New("failed to remove old database")
 			}
 
-			// Add bucket for the common pages
-			targetBuckets := make(map[string]*bbolt.Bucket)
-			targetBuckets["common"], _ = root.CreateBucket(commonBucket)
+			// Keep mapping from language to bucket
+			langBucket := make(map[string]*bbolt.Bucket)
+			langBucket["default"] = deflt
+
+			// Add list of target buckets per language
+			pageBucket := make(map[string]map[string]*bbolt.Bucket)
+			pageBucket["default"] = make(map[string]*bbolt.Bucket)
+			pageBucket["default"]["common"], _ = deflt.CreateBucket(commonBucket)
 
 			// Read in all pages
 			for _, file := range zipReader.File {
+				// Is it a markdown file?
+				if !strings.HasSuffix(path.Base(file.Name), ".md") {
+					// No
+					continue
+				}
+
+				// It's a Markdown file, let us put it in the right spot
 				command := strings.TrimSuffix(path.Base(file.Name), ".md")
 				dir := path.Dir(file.Name)
 
-				// Only add english pages, for now
+				var language, target string
+
+				// Detect language
+				// Is it the default: English?
 				if strings.HasPrefix(dir, "pages/") {
-					target := strings.TrimPrefix(dir, "pages/")
+					language = "default"
+					target = strings.TrimPrefix(dir, "pages/")
 
-					// Read the page
-					contents, err := file.Open()
+				} else if strings.HasPrefix(dir, "pages.") {
+					// Else extract the language code and target
+					split := strings.SplitN(dir, "/", 2)
+					language = strings.TrimPrefix(split[0], "pages.")
+					target = split[1]
 
-					if err != nil {
-						fmt.Println("warning:", err)
-						continue
+					// See if the language aleady exists?
+					if langBucket[language] == nil {
+						// No we need to create it
+						nw, _ := tx.CreateBucket([]byte(language))
+						langBucket[language] = nw
+
+						// Also add a common bucket
+						pageBucket[language] = make(map[string]*bbolt.Bucket)
+						pageBucket[language]["common"], _ = nw.CreateBucket(commonBucket)
 					}
 
-					out, err := ioutil.ReadAll(contents)
-					contents.Close()
-
-					if err != nil {
-						fmt.Println("warning:", err)
-						continue
-					}
-
-					// Do we have to create a new bucket?
-					tgtBucket, ok := targetBuckets[target]
-
-					if !ok {
-						tgtBucket, _ = root.CreateBucket([]byte(target))
-						targetBuckets[target] = tgtBucket
-					}
-
-					// Compress the page and write it to the bucket
-					tgtBucket.Put([]byte(command), out)
+				} else {
+					// Not a page to add
+					continue
 				}
+
+				// Read the page
+				contents, err := file.Open()
+
+				if err != nil {
+					fmt.Println("warning:", err)
+					continue
+				}
+
+				out, err := ioutil.ReadAll(contents)
+				contents.Close()
+
+				if err != nil {
+					fmt.Println("warning:", err)
+					continue
+				}
+
+				// Do we have to create a new bucket?
+				tgtBucket, ok := pageBucket[language][target]
+
+				if !ok {
+					tgtBucket, _ = langBucket[language].CreateBucket([]byte(target))
+					pageBucket[language][target] = tgtBucket
+				}
+
+				// Compress the page and write it to the bucket
+				tgtBucket.Put([]byte(command), out)
 			}
 
 			// Done!

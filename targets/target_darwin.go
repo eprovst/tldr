@@ -1,4 +1,4 @@
-// Copyright © 2018 Evert Provoost
+// Copyright © 2019 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,9 +15,17 @@
 
 package targets
 
+import (
+	"os"
+	"strings"
+)
+
 // OsName is the name of the current platform
 const OsName = "macOS"
 
 // OsDir is the directory in the tldr pages containing
 // the pages for this platform
 var OsDir = "osx"
+
+// CurrentLanguage is the current users language
+var CurrentLanguage = strings.SplitN(os.Getenv("LANG"), "_", 2)[0]

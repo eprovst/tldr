@@ -26,8 +26,12 @@ func validateArguments() error {
 	// See if we have too many flags
 	numFlags := flag.NFlag()
 
-	// The platform flag never counts
+	// The platform and language flags never count
 	if *platform != "" {
+		numFlags--
+	}
+
+	if *language != "" {
 		numFlags--
 	}
 
