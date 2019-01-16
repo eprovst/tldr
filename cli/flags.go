@@ -23,8 +23,8 @@ var (
 	// Add flags
 	update   = flag.BoolP("update", "u", false, "redownload pages")
 	help     = flag.BoolP("help", "h", false, "help for tldr")
-	platform = flag.StringP("platform", "p", "", "overide default platform")
-	language = flag.StringP("language", "l", "", "overide default language")
+	platform = flag.StringP("platform", "p", "", "overide default `platf`orm")
+	language = flag.StringP("language", "l", "", "overide default `lang`uage")
 	search   = flag.StringP("search", "s", "", "list pages matching `regex`")
 	purge    = flag.Bool("purge", false, "remove database from disk")
 	render   = flag.String("render", "", "render local `page`")

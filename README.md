@@ -31,9 +31,9 @@ sudo chmod 644 /etc/bash_completion.d/tldr
 ```
 
 ## Usage
-- You can print information for one or more commands by using:
+- You can print the tldr page for a command by using:
   ```
-  tldr command1 [command2 ...]
+  tldr command
   ```
 - This client downloads all tldr pages on the first run (resulting in a database of about 800&nbsp;KB) which should only take a couple of seconds. To redownload the pages and rebuild the database you can use:
   ```

@@ -32,7 +32,7 @@ const thisVersion = "v0.4.0"
 func showHelp() {
 	fmt.Fprintln(os.Stderr, "Go command line client for tldr")
 	fmt.Fprintln(os.Stderr, "\nUsage:")
-	fmt.Fprintln(os.Stderr, "  tldr [flags] command [commands...]")
+	fmt.Fprintln(os.Stderr, "  tldr [flags] [command]")
 	fmt.Fprintln(os.Stderr, "\nFlags:")
 	flag.PrintDefaults()
 }

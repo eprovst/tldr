@@ -40,32 +40,36 @@ func Show(database *bbolt.DB, commands []string) {
 				return nil
 			}
 
-			// Print all the given commands
-			for _, command := range commands {
-				var page []byte
+			// Join the subcommands with a `-`
+			command := commands[0]
+			for _, subcommand := range commands[1:] {
+				command += "-" + subcommand
+			}
 
-				if langPlatform != nil {
-					page = langPlatform.Get([]byte(command))
-				}
+			// Print the given command
+			var page []byte
 
-				if page == nil && langCommon != nil {
-					page = langCommon.Get([]byte(command))
-				}
+			if langPlatform != nil {
+				page = langPlatform.Get([]byte(command))
+			}
 
-				if page == nil && englishPlatform != nil {
-					page = englishPlatform.Get([]byte(command))
-				}
+			if page == nil && langCommon != nil {
+				page = langCommon.Get([]byte(command))
+			}
 
-				if page == nil {
-					page = englishCommon.Get([]byte(command))
-				}
+			if page == nil && englishPlatform != nil {
+				page = englishPlatform.Get([]byte(command))
+			}
 
-				if page == nil {
-					pageUnavailable(command)
+			if page == nil {
+				page = englishCommon.Get([]byte(command))
+			}
 
-				} else {
-					prettyPrint(page)
-				}
+			if page == nil {
+				pageUnavailable(command)
+
+			} else {
+				prettyPrint(page)
 			}
 
 			return nil
