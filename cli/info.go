@@ -1,4 +1,4 @@
-// Copyright © 2019 Evert Provoost
+// Copyright © 2020 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,18 +16,17 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/elecprog/tldr/targets"
 	flag "github.com/spf13/pflag"
 )
 
 // Version info
-const thisVersion = "v0.4.0"
+const thisVersion = "v0.4.1"
+const thisSpec = "1.2 (partially)"
 
 func showHelp() {
 	fmt.Fprintln(os.Stderr, "Go command line client for tldr")
@@ -38,55 +37,14 @@ func showHelp() {
 }
 
 func showVersion() {
-	fmt.Println("tldr", thisVersion, "on", targets.OsName)
-}
-
-// TODO: Once Go 1.11 is more commonly available remove this in favour of
-// os.UserCacheDir(), ie. when Ubuntu 19.04 is released.
-// From Go standard library: os/file.go#L346
-func userCacheDir() (string, error) {
-	var dir string
-
-	switch runtime.GOOS {
-	case "windows":
-		dir = os.Getenv("LocalAppData")
-
-		if dir == "" {
-			return "", errors.New("%LocalAppData% is not defined")
-		}
-
-	case "darwin":
-		dir = os.Getenv("HOME")
-		if dir == "" {
-			return "", errors.New("$HOME is not defined")
-		}
-		dir += "/Library/Caches"
-
-	case "plan9":
-		dir = os.Getenv("home")
-		if dir == "" {
-			return "", errors.New("$home is not defined")
-		}
-		dir += "/lib/cache"
-
-	default: // Unix
-		dir = os.Getenv("XDG_CACHE_HOME")
-		if dir == "" {
-			dir = os.Getenv("HOME")
-			if dir == "" {
-				return "", errors.New("neither $XDG_CACHE_HOME nor $HOME are defined")
-			}
-			dir += "/.cache"
-		}
-	}
-
-	return dir, nil
+	fmt.Println("Go client for tldr", "("+thisVersion+")", "on", targets.OsName)
+	fmt.Println("Implements tldr spec", thisSpec)
 }
 
 // getDatabasePath returns the path to the database or panics if the system
 // does not have a cache directory.
 func getDatabasePath() string {
-	dir, err := userCacheDir()
+	dir, err := os.UserCacheDir()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)

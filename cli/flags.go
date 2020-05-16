@@ -1,4 +1,4 @@
-// Copyright © 2019 Evert Provoost
+// Copyright © 2020 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,16 +24,15 @@ var (
 	update   = flag.BoolP("update", "u", false, "redownload pages")
 	help     = flag.BoolP("help", "h", false, "help for tldr")
 	platform = flag.StringP("platform", "p", "", "overide default `platf`orm")
-	language = flag.StringP("language", "l", "", "overide default `lang`uage")
+	list     = flag.BoolP("list", "l", false, "list all pages for the current platform")
+	language = flag.StringP("language", "L", "", "overide default `lang`uage")
 	search   = flag.StringP("search", "s", "", "list pages matching `regex`")
 	purge    = flag.Bool("purge", false, "remove database from disk")
-	render   = flag.String("render", "", "render local `page`")
+	render   = flag.String("render", "", "render page from `file`")
 	version  = flag.Bool("version", false, "version for tldr")
 
 	// Add hidden scripting flags
 	printBashCompletion = flag.Bool("bash-completion", false, "show the bash autocompletion for tldr")
-	list                = flag.Bool("list", false, "list all pages for the current platform")
-	listAll             = flag.Bool("list-all", false, "list all available pages")
 	listPlatforms       = flag.Bool("list-platforms", false, "list all supported platforms")
 	listLanguages       = flag.Bool("list-languages", false, "list all supported languages")
 )
@@ -41,8 +40,6 @@ var (
 func init() {
 	// Mark hidden scripting flags
 	flag.CommandLine.MarkHidden("bash-completion")
-	flag.CommandLine.MarkHidden("list")
-	flag.CommandLine.MarkHidden("list-all")
 	flag.CommandLine.MarkHidden("list-platforms")
 	flag.CommandLine.MarkHidden("list-languages")
 

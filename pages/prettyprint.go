@@ -1,4 +1,4 @@
-// Copyright © 2019 Evert Provoost
+// Copyright © 2020 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -45,6 +47,12 @@ func pageUnavailable(command string) {
 }
 
 func prettyPrint(page []byte) {
+	// Don't pretty print to TTY
+	if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+		fmt.Print(string(page))
+		return
+	}
+
 	// Add an blank line in front of the page
 	fmt.Println()
 

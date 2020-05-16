@@ -1,4 +1,4 @@
-// Copyright © 2019 Evert Provoost
+// Copyright © 2020 Evert Provoost
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -136,12 +136,11 @@ func Run() {
 	// Other actions
 	// Do we have to list commands?
 	if *list {
-		pages.List(db)
-		return
-	}
-
-	if *listAll {
-		pages.ListAll(db)
+		if targets.OsDir == "all" {
+			pages.ListAll(db)
+		} else {
+			pages.List(db)
+		}
 		return
 	}
 
