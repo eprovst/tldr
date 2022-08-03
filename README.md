@@ -1,3 +1,7 @@
+> **Warning**  
+> This client is, currently, **unmaintained**. Another fast implementation you could try is [tealdeer](https://github.com/dbrgn/tealdeer) written in Rust.  
+> For other options, see [the tldr wiki](https://github.com/tldr-pages/tldr/wiki/tldr-pages-clients).
+
 tldr
 ====
 
